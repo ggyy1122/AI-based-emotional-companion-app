@@ -1,0 +1,9 @@
+﻿<Page x:Class="GameApp.Pages.EmotionBook"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="EmotionBook">
+
+    <Grid>
+        <Button Content="返回主页" Width="100" Height="40" Click="BackToMainPage_Click" />
+    </Grid>
+</Page>
