@@ -21,12 +21,12 @@
 
         <Canvas x:Name="GameCanvas" Background="Transparent">
             <!-- 炮塔底座 -->
-            <Image x:Name="TowerBase" Source="/Resources/tower_base.png" 
+            <Image x:Name="TowerBase" Source="pack://application:,,,/Resources/tower_base.png" 
                    Width="60" Height="60"
                    Canvas.Left="370" Canvas.Top="270" Stretch="Uniform"/>
 
             <!-- 炮管（可旋转的图片） -->
-            <Image x:Name="TowerGun" Source="/Resources/static_rocket.png" 
+            <Image x:Name="TowerGun" Source="pack://application:,,,/Resources/static_rocket.png" 
                    Width="60" Height="39"
                    Canvas.Left="370" Canvas.Top="280" Stretch="Uniform">
                 <Image.RenderTransform>

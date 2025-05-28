@@ -33,7 +33,7 @@
          VerticalAlignment="Top"
          Style="{StaticResource NoBorderButtonStyle}">  
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Image Source="pack://application:,,,/Resources/release_game.png" Width="48" Height="48" />
+                <Image Source="/Resources/release_game.png" Width="48" Height="48" />
                 <TextBlock Text="别惹导弹"
         HorizontalAlignment="Center"
         Margin="0,4,0,0"

@@ -11,6 +11,7 @@ using System.Windows.Media.Animation;
 using System.Diagnostics;
 using System.Windows.Media.Imaging;
 using System.Data.SQLite;
+using GameApp;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace TowerDefenseGame
@@ -67,11 +68,11 @@ namespace TowerDefenseGame
 
             for (int i = 0; i < 7; i++)
             {
-                boom.Add(new BitmapImage(new Uri($"D:\\C#项目\\MyGame\\MyGame\\Resources\\boom{i}.png")));
+                boom.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/boom{i}.png")));
             }
             for(int i = 0; i < 4; i++)
             {
-                AllEnemy.Add(new BitmapImage(new Uri($"D:\\C#项目\\MyGame\\MyGame\\Resources\\monster{i}.png")));
+               AllEnemy.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/monster{i}.png")));
             }
         }
 
@@ -233,7 +234,7 @@ namespace TowerDefenseGame
             // 创建子弹
             var bullet = new Image
             {
-                Source = new BitmapImage(new Uri("D:\\C#项目\\MyGame\\MyGame\\Resources\\static_rocket.png")),
+                Source = new BitmapImage(new Uri("pack://application:,,,/Resources/static_rocket.png")),
                 Width = TowerGun.Width,
                 Height = TowerGun.Height,
                 RenderTransform = new RotateTransform
@@ -402,7 +403,7 @@ namespace TowerDefenseGame
 
         public void SaveScore() // 保存最高分
         {
-            using (var connection = new SQLiteConnection("Data Source=game.db;Version=3;"))
+            using (var connection = new SQLiteConnection(App.ConnectionString))
             {
                 connection.Open();
 
@@ -428,7 +429,7 @@ namespace TowerDefenseGame
 
         public static int LoadScore() // 载入最高分
         {
-            using (var connection = new SQLiteConnection("Data Source=game.db;Version=3;"))
+            using (var connection = new SQLiteConnection(App.ConnectionString))
             {
                 connection.Open();
 
