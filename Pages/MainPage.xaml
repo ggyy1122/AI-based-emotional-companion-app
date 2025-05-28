@@ -4,43 +4,104 @@
       Title="MainPage">
 
     <Grid>
-        <Image Source="pack://application:,,,/Resources/background.jpg" Stretch="Fill" Panel.ZIndex="-1" IsEnabled="False"/>
-        <Button Width="120" Height="80" Click="GoToEmotionBook_Click"
-        Background="Transparent" 
-        BorderBrush="Transparent"
-        BorderThickness="0"
-        Padding="0"
-        Margin="0,10,30,0" 
-        HorizontalAlignment="Right" 
-        VerticalAlignment="Top"
-        Style="{StaticResource NoBorderButtonStyle}">
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Image Source="pack://application:,,,/Resources/emotion_book.png" Width="48" Height="48" />
-                <TextBlock Text="心情笔记"
-               HorizontalAlignment="Center"
-               Margin="0,4,0,0"
-               Foreground="Black" FontWeight="Bold"/>
-            </StackPanel>
-        </Button>
+        <Image Source="/Resources/background.jpg"
+               Stretch="Fill"
+               Panel.ZIndex="-1"
+               IsEnabled="False"/>
 
-        <Button Width="120" Height="80" Click="GoToGame_Click"
-         Background="Transparent" 
-         BorderBrush="Transparent"
-         BorderThickness="0"
-         Padding="0"
-         Margin="0,40,150,0" 
-         HorizontalAlignment="Right" 
-         VerticalAlignment="Top"
-         Style="{StaticResource NoBorderButtonStyle}">  
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Image Source="pack://application:,,,/Resources/release_game.png" Width="48" Height="48" />
-                <TextBlock Text="别惹导弹"
-        HorizontalAlignment="Center"
-        Margin="0,4,0,0"
-        Foreground="Black" FontWeight="Bold"/>
-            </StackPanel>
-        </Button>
+        <!-- Right Side Button Panel -->
+        <StackPanel Orientation="Vertical"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="30,20,30,0">
 
+            <!-- Emotion Book Button -->
+            <Button Width="120"
+                    Height="80"
+                    Click="GoToEmotionBook_Click"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    Margin="0,0,0,15"
+                    Style="{StaticResource NoBorderButtonStyle}">
+                <StackPanel Orientation="Vertical"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Image Source="/Resources/emotion_book.png"
+                           Width="48"
+                           Height="48"/>
+                    <TextBlock Text="心情笔记"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"
+                               Foreground="Black"
+                               FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+
+            <Button Width="120"
+                    Height="80"
+                    Click="GoToGame_Click"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    Margin="0,40,150,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource NoBorderButtonStyle}">
+                <StackPanel Orientation="Vertical"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Image Source="pack://application:,,,/Resources/release_game.png"
+                           Width="48"
+                           Height="48"/>
+                    <TextBlock Text="别惹导弹"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"
+                               Foreground="Black"
+                               FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+
+
+            <!-- AI Chat Button -->
+            <Button Width="120"
+                    Height="80"
+                    Click="GoToAIChatPage_Click"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    Margin="0,0,0,15"
+                    Style="{StaticResource NoBorderButtonStyle}">
+                <StackPanel Orientation="Vertical"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Image Source="/Resources/ai_chat.png"
+                           Width="48"
+                           Height="48"/>
+                    <TextBlock Text="AI 语音交互"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"
+                               Foreground="Black"
+                               FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Example: Add more buttons easily -->
+            <!-- 
+            <Button Width="120" Height="80" Click="GoToSettings_Click"
+                    Style="{StaticResource NoBorderButtonStyle}" Margin="0,0,0,15">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Source="/Resources/settings.png" Width="48" Height="48"/>
+                    <TextBlock Text="设置" HorizontalAlignment="Center" Margin="0,4,0,0" 
+                               Foreground="Black" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+            -->
+
+        </StackPanel>
 
     </Grid>
 
