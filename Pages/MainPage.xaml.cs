@@ -22,5 +22,10 @@ namespace GameApp
         {
             this.NavigationService.Navigate(new GamePage());
         }
+
+        private void GoToAIChatPage_Click(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new AIChatPage());
+        }
     }
 }
