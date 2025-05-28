@@ -4,8 +4,8 @@
       Title="MainPage">
 
     <Grid>
-        <Image Source="/Resources/background.jpg" Stretch="Fill" Panel.ZIndex="-1" IsEnabled="False"/>
-        <Button Width="120" Height="80" Click="GoToSecondPage_Click"
+        <Image Source="pack://application:,,,/Resources/background.jpg" Stretch="Fill" Panel.ZIndex="-1" IsEnabled="False"/>
+        <Button Width="120" Height="80" Click="GoToEmotionBook_Click"
         Background="Transparent" 
         BorderBrush="Transparent"
         BorderThickness="0"
@@ -20,6 +20,24 @@
                HorizontalAlignment="Center"
                Margin="0,4,0,0"
                Foreground="Black" FontWeight="Bold"/>
+            </StackPanel>
+        </Button>
+
+        <Button Width="120" Height="80" Click="GoToGame_Click"
+         Background="Transparent" 
+         BorderBrush="Transparent"
+         BorderThickness="0"
+         Padding="0"
+         Margin="0,40,150,0" 
+         HorizontalAlignment="Right" 
+         VerticalAlignment="Top"
+         Style="{StaticResource NoBorderButtonStyle}">  
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image Source="pack://application:,,,/Resources/release_game.png" Width="48" Height="48" />
+                <TextBlock Text="别惹导弹"
+        HorizontalAlignment="Center"
+        Margin="0,4,0,0"
+        Foreground="Black" FontWeight="Bold"/>
             </StackPanel>
         </Button>
 

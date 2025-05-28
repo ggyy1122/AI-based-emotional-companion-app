@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using GameApp.Pages;
+using TowerDefenseGame;
 
 namespace GameApp
 {
@@ -13,9 +14,13 @@ namespace GameApp
         {
             InitializeComponent();
         }
-        private void GoToSecondPage_Click(object sender, RoutedEventArgs e)
+        private void GoToEmotionBook_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new EmotionBook());
+        }
+        private void GoToGame_Click(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new GamePage());
         }
     }
 }
