@@ -27,7 +27,7 @@ namespace TowerDefenseGame
         private readonly List<Vector> _bulletDirections = new List<Vector>();//子弹的移动方向
         private readonly List<Vector> _enemyDirections = new List<Vector>();//敌人的移动方向
 
-        private readonly List<BitmapImage> AllEnemy= new List<BitmapImage>();
+        private readonly List<BitmapImage> AllEnemy = new List<BitmapImage>();
 
         private int _score = 0;//得分
         private int _greatestScore = 0;
@@ -52,14 +52,17 @@ namespace TowerDefenseGame
 
         List<BitmapImage> boom = new List<BitmapImage>();
 
+        private const string RESOURCES_PATH = "pack://application:,,,/Resources/";
+
+
         public GamePage()
         {
             InitializeComponent();
 
             // 设置游戏计时器，60FPS
-            _gameTimer= new DispatcherTimer//定时器，用于周期性任务
+            _gameTimer = new DispatcherTimer//定时器，用于周期性任务
             {
-                Interval= TimeSpan.FromSeconds(1.0 / 60.0)//每隔这段间隔执行一次Tick
+                Interval = TimeSpan.FromSeconds(1.0 / 60.0)//每隔这段间隔执行一次Tick
             };
             _gameTimer.Tick += GameLoop;//将Tick与游戏主循环绑定，使得每次触发Tick，都会执行GameLoop
             _greatestScore = LoadScore();
@@ -70,9 +73,9 @@ namespace TowerDefenseGame
             {
                 boom.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/boom{i}.png")));
             }
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
-               AllEnemy.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/monster{i}.png")));
+                AllEnemy.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/monster{i}.png")));
             }
         }
 
@@ -95,13 +98,13 @@ namespace TowerDefenseGame
             //_lastRotationTime = DateTime.Now;
             // 获取鼠标相对于炮塔的位置
             Point mousePos = e.GetPosition(GameCanvas);
-            Point towerCenter = new Point(Canvas.GetLeft(TowerBase) + TowerBase.Width / 2,Canvas.GetTop(TowerBase) + TowerBase.Height / 2);
+            Point towerCenter = new Point(Canvas.GetLeft(TowerBase) + TowerBase.Width / 2, Canvas.GetTop(TowerBase) + TowerBase.Height / 2);
             // 计算角度
             double angle = Math.Atan2(mousePos.Y - towerCenter.Y, mousePos.X - towerCenter.X);
             angle = angle * 180 / Math.PI;
             // 旋转炮管
             //ScoreText.Text = $"当前分数: {_score} (最高分数: {TowerBase.Height})";
-            
+
             Rotate.CenterX = TowerGun.Width / 2;
             Rotate.CenterY = TowerGun.Height / 2;
             Rotate.Angle = angle;
@@ -145,7 +148,7 @@ namespace TowerDefenseGame
             Canvas.SetLeft(TowerBase, elementLeft);
             Canvas.SetTop(TowerBase, elementTop);
             Canvas.SetLeft(TowerGun, elementLeft);
-            Canvas.SetTop(TowerGun, elementTop+10);
+            Canvas.SetTop(TowerGun, elementTop + 10);
         }
 
         private void SpawnEnemies()//敌人的生成
@@ -153,7 +156,7 @@ namespace TowerDefenseGame
             if ((DateTime.Now - _lastEnemySpawnTime).TotalSeconds < EnemySpawnInterval)
                 return;//如果没到间隔时间，就不生成
 
-            _lastEnemySpawnTime= DateTime.Now;
+            _lastEnemySpawnTime = DateTime.Now;
 
             // 随机选择从哪条边生成敌人
             int edge = _random.Next(4);
@@ -162,20 +165,20 @@ namespace TowerDefenseGame
             switch (edge)
             {
                 case 0: // 上边
-                    x= _random.NextDouble() * GameCanvas.ActualWidth;
-                    y= -20;
+                    x = _random.NextDouble() * GameCanvas.ActualWidth;
+                    y = -20;
                     break;
                 case 1: // 右边
-                    x= GameCanvas.ActualWidth + 20;
-                    y= _random.NextDouble() * GameCanvas.ActualHeight;
+                    x = GameCanvas.ActualWidth + 20;
+                    y = _random.NextDouble() * GameCanvas.ActualHeight;
                     break;
                 case 2: // 下边
-                    x= _random.NextDouble() * GameCanvas.ActualWidth;
-                    y= GameCanvas.ActualHeight + 20;
+                    x = _random.NextDouble() * GameCanvas.ActualWidth;
+                    y = GameCanvas.ActualHeight + 20;
                     break;
                 case 3: // 左边
-                    x= -20;
-                    y= _random.NextDouble() * GameCanvas.ActualHeight;
+                    x = -20;
+                    y = _random.NextDouble() * GameCanvas.ActualHeight;
                     break;
             }
 
@@ -184,8 +187,8 @@ namespace TowerDefenseGame
             var enemy = new Image
             {
                 Source = AllEnemy[index],
-                Width= 30+10*index,
-                Height= 30+10*index, 
+                Width = 30 + 10 * index,
+                Height = 30 + 10 * index,
             };
 
             Canvas.SetLeft(enemy, x);
@@ -197,15 +200,15 @@ namespace TowerDefenseGame
             Point center = new Point(
                 GameCanvas.ActualWidth / 2 + (_random.NextDouble() - 0.5) * 100,
                 GameCanvas.ActualHeight / 2 + (_random.NextDouble() - 0.5) * 100);
-            Vector direction = new Vector(center.X - x,center.Y - y);
+            Vector direction = new Vector(center.X - x, center.Y - y);
             direction.Normalize();
             _enemyDirections.Add(direction);
         }
 
         private void MoveBullets()//子弹的移动
         {
-            if(TowerGun.Visibility==Visibility.Collapsed&&(DateTime.Now-_lastSeeTime).TotalSeconds>=RocketNoseeInterval)
-                TowerGun.Visibility= Visibility.Visible;
+            if (TowerGun.Visibility == Visibility.Collapsed && (DateTime.Now - _lastSeeTime).TotalSeconds >= RocketNoseeInterval)
+                TowerGun.Visibility = Visibility.Visible;
             // 自动射击
             if ((DateTime.Now - _lastShotTime).TotalSeconds >= ShotInterval)
             {//如果到了间隔就生成子弹
@@ -242,7 +245,7 @@ namespace TowerDefenseGame
                     Angle = Rotate.Angle,
                     CenterX = TowerGun.Width / 2,  // 绝对坐标：Width * 0.5
                     CenterY = TowerGun.Height / 2 // 绝对坐标：Height * 0.8
-                 }
+                }
             };
 
 
@@ -289,7 +292,7 @@ namespace TowerDefenseGame
                 }
 
                 // 角度增加
-                rotateTransform.Angle += 1*rotate;
+                rotateTransform.Angle += 1 * rotate;
             }
         }
 
@@ -298,7 +301,7 @@ namespace TowerDefenseGame
             for (int i = _bullets.Count - 1; i >= 0; i--)
             {
                 var bullet = _bullets[i];
-                Rect bulletRect = new Rect(Canvas.GetLeft(bullet),Canvas.GetTop(bullet),bullet.Width,bullet.Height);
+                Rect bulletRect = new Rect(Canvas.GetLeft(bullet), Canvas.GetTop(bullet), bullet.Width, bullet.Height);
 
                 for (int j = _enemies.Count - 1; j >= 0; j--)
                 {
@@ -357,7 +360,7 @@ namespace TowerDefenseGame
 
                         // 增加分数
                         _score++;
-                        if(_score>_greatestScore) _greatestScore = _score;
+                        if (_score > _greatestScore) _greatestScore = _score;
                         ScoreText.Text = $"当前分数: {_score} (最高分数: {_greatestScore})";
                         break;
                     }
@@ -375,7 +378,7 @@ namespace TowerDefenseGame
                 double top = Canvas.GetTop(bullet);
 
                 if (left < -50 || left > GameCanvas.ActualWidth + 50 ||
-                    top< -50 || top > GameCanvas.ActualHeight + 50)
+                    top < -50 || top > GameCanvas.ActualHeight + 50)
                 {
                     GameCanvas.Children.Remove(bullet);
                     _bullets.RemoveAt(i);
@@ -391,7 +394,7 @@ namespace TowerDefenseGame
                 double top = Canvas.GetTop(enemy);
 
                 if (left < -100 || left > GameCanvas.ActualWidth + 100 ||
-                    top< -100 || top > GameCanvas.ActualHeight + 100)
+                    top < -100 || top > GameCanvas.ActualHeight + 100)
                 {
                     GameCanvas.Children.Remove(enemy);
                     _enemies.RemoveAt(i);
