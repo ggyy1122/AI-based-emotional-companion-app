@@ -87,10 +87,19 @@ namespace GameApp.Pages
         /// </summary>
         private void LoadSessionMessages(ChatSession session)
         {
+            // Clear UI
             MessagesPanel.Children.Clear();
 
+            // Clear and rebuild AI service conversation history
+            _aiService.ClearConversationHistory();
+
+            // Load messages to UI and sync with AI service
             foreach (var message in session.Messages)
             {
+                // Add to AI service history
+                _aiService.AddToConversationHistory(message.Role, message.Content);
+
+                // Add to UI
                 if (message.Role == ChatRole.User)
                 {
                     AddUserMessage(message.Content);
@@ -213,7 +222,13 @@ namespace GameApp.Pages
 
             if (result == MessageBoxResult.Yes)
             {
+                // Clear session messages
                 _sessionManager.ClearSession(session);
+
+                // Clear AI service conversation history to reset context
+                _aiService.ClearConversationHistory();
+
+                // Refresh UI if this is the current session
                 if (_sessionManager.CurrentSession == session)
                 {
                     LoadSessionMessages(session);

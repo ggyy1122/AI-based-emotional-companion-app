@@ -141,5 +141,12 @@ namespace GameApp.Models.AIChat
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        // Add this method to update preview when messages change
+        public void NotifyUIUpdate()
+        {
+            OnPropertyChanged(nameof(PreviewText));
+            OnPropertyChanged(nameof(LastUpdated));
+        }
     }
 }

@@ -31,9 +31,9 @@
                         Background="#1E1E20"
                         Padding="16,12">
                     <TextBlock Text="Chat Sessions"
-                            Foreground="White"
-                            FontSize="14"
-                            FontWeight="SemiBold"/>
+                               Foreground="White"
+                               FontSize="14"
+                               FontWeight="SemiBold"/>
                 </Border>
 
                 <!-- New Chat Button -->
@@ -52,7 +52,7 @@
                                         <Border Background="{TemplateBinding Background}"
                                                 CornerRadius="6">
                                             <ContentPresenter HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"/>
+                                                              VerticalAlignment="Center"/>
                                         </Border>
                                     </ControlTemplate>
                                 </Setter.Value>
@@ -61,23 +61,23 @@
                     </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="+"
-                                Foreground="White"
-                                FontSize="16"
-                                FontWeight="Bold"
-                                Margin="0,0,8,0"/>
+                                   Foreground="White"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Margin="0,0,8,0"/>
                         <TextBlock Text="New Chat"
-                                Foreground="White"
-                                FontSize="12"/>
+                                   Foreground="White"
+                                   FontSize="12"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Sessions List -->
                 <ScrollViewer Grid.Row="2"
-                        VerticalScrollBarVisibility="Auto"
-                        Margin="8,0,8,8">
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="8,0,8,8">
                     <ListBox x:Name="SessionsList"
-                            Background="Transparent"
-                            BorderThickness="0"
+                             Background="Transparent"
+                             BorderThickness="0"
                              SelectionChanged="SessionsList_SelectionChanged">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -97,12 +97,12 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsSelected"
-                                                        Value="True">
+                                                         Value="True">
                                                     <Setter Property="Background"
                                                             Value="#404040"/>
                                                 </Trigger>
                                                 <Trigger Property="IsMouseOver"
-                                                        Value="True">
+                                                         Value="True">
                                                     <Setter Property="Background"
                                                             Value="#353535"/>
                                                 </Trigger>
@@ -122,22 +122,22 @@
 
                                     <!-- Session Info -->
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding Name}"
-                                                Foreground="White"
-                                                FontSize="12"
+                                        <TextBlock Text="{Binding Name, Mode=OneWay}"
+                                                   Foreground="White"
+                                                   FontSize="12"
                                                    FontWeight="Medium"
-                                                TextTrimming="CharacterEllipsis"
-                                                MaxWidth="180"/>
-                                        <TextBlock Text="{Binding PreviewText}"
-                                                Foreground="#999999"
-                                                FontSize="10"
                                                    TextTrimming="CharacterEllipsis"
-                                                MaxWidth="180"
-                                                Margin="0,2,0,0"/>
-                                        <TextBlock Text="{Binding LastUpdated, StringFormat='{}{0:MMM dd, HH:mm}'}"
+                                                   MaxWidth="180"/>
+                                        <TextBlock Text="{Binding PreviewText, Mode=OneWay}"
+                                                   Foreground="#999999"
+                                                   FontSize="10"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="180"
+                                                   Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LastUpdated, StringFormat='{}{0:MMM dd, HH:mm}', Mode=OneWay}"
                                                    Foreground="#666666"
-                                                FontSize="9"
-                                                Margin="0,2,0,0"/>
+                                                   FontSize="9"
+                                                   Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <!-- Menu Button -->
@@ -151,9 +151,9 @@
                                             Tag="{Binding}"
                                             Margin="4,0,0,0">
                                         <TextBlock Text="⋮"
-                                                Foreground="#999999"
-                                                FontSize="14"
-                                                HorizontalAlignment="Center"/>
+                                                   Foreground="#999999"
+                                                   FontSize="14"
+                                                   HorizontalAlignment="Center"/>
                                     </Button>
                                 </Grid>
                             </DataTemplate>
@@ -185,24 +185,24 @@
                             BorderThickness="0"
                             Margin="8,0,0,0">
                         <Image Source="/Resources/ChatPage/home.png"
-                                Width="20"
-                                Height="20"/>
+                               Width="20"
+                               Height="20"/>
                     </Button>
                     <TextBlock x:Name="CurrentSessionTitle"
-                            Text="AI Assistant"
-                            Foreground="White"
-                            FontSize="16"
+                               Text="AI Assistant"
+                               Foreground="White"
+                               FontSize="16"
                                FontWeight="Bold"
-                            HorizontalAlignment="Center"/>
+                               HorizontalAlignment="Center"/>
                 </Grid>
             </Border>
 
             <!-- Chat Content Area -->
             <ScrollViewer Grid.Row="1"
-                    x:Name="ChatScrollViewer"
-                    VerticalScrollBarVisibility="Auto"
-                    Padding="12"
-                    Margin="0,0,0,5">
+                          x:Name="ChatScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          Padding="12"
+                          Margin="0,0,0,5">
                 <StackPanel x:Name="MessagesPanel">
                     <!-- Messages will be added here dynamically -->
                 </StackPanel>
@@ -214,7 +214,7 @@
                     Margin="0,5,0,12"
                     HorizontalAlignment="Stretch">
                 <Grid x:Name="InputGrid"
-                        MaxWidth="1000">
+                      MaxWidth="1000">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -234,19 +234,19 @@
                             BorderBrush="#E0E0E0"
                             ToolTip="Attach File">
                         <Image Source="/Resources/ChatPage/attach_icon.png"
-                                Width="20"
-                                Height="20"/>
+                               Width="20"
+                               Height="20"/>
                     </Button>
 
                     <!-- Text Input -->
                     <TextBox Grid.Column="1"
-                            x:Name="MessageInput"
-                            Height="42"
-                            Margin="0,0,8,0"
-                            TextWrapping="Wrap"
+                             x:Name="MessageInput"
+                             Height="42"
+                             Margin="0,0,8,0"
+                             TextWrapping="Wrap"
                              VerticalContentAlignment="Center"
-                            Padding="12,0,12,0"
-                            BorderBrush="#E0E0E0"
+                             Padding="12,0,12,0"
+                             BorderBrush="#E0E0E0"
                              Text="Type your message here..."/>
 
                     <!-- Voice Button -->
@@ -260,8 +260,8 @@
                             BorderBrush="#E0E0E0"
                             ToolTip="Voice Input">
                         <Image Source="/Resources/ChatPage/microphone_icon.png"
-                                Width="20"
-                                Height="20"/>
+                               Width="20"
+                               Height="20"/>
                     </Button>
 
                     <!-- Stop Button -->
@@ -275,8 +275,8 @@
                             BorderBrush="#E0E0E0"
                             ToolTip="Stop">
                         <Image Source="/Resources/ChatPage/stop_icon.png"
-                                Width="20"
-                                Height="20"/>
+                               Width="20"
+                               Height="20"/>
                     </Button>
 
                     <!-- Send Button -->
@@ -290,8 +290,8 @@
                             BorderBrush="#3A80D2"
                             ToolTip="Send Message">
                         <Image Source="/Resources/ChatPage/send_icon.png"
-                                Width="20"
-                                Height="20"/>
+                               Width="20"
+                               Height="20"/>
                     </Button>
                 </Grid>
             </Border>

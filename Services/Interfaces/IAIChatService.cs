@@ -23,5 +23,15 @@ namespace GameApp.Services.Interfaces
         /// Stop any ongoing streaming response
         /// </summary>
         void StopStreaming();
+
+        /// <summary>
+        /// Add a message to conversation history without making API call
+        /// </summary>
+        void AddToConversationHistory(string role, string content);
+
+        /// <summary>
+        /// Clear the conversation history/context
+        /// </summary>
+        void ClearConversationHistory();
     }
 }

@@ -5,7 +5,7 @@ namespace GameApp.Services.AIChat
         public const string ApiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
         // Replace with your actual API key or retrieve from secure storage
-        public const string ApiKey = "API_KEY";
+        public const string ApiKey = "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";
 
         public const string ModelName = "openai/gpt-4o-mini";
 

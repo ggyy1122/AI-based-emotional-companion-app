@@ -278,6 +278,7 @@ namespace GameApp.Services.AIChat
         public void AddUserMessage(string content)
         {
             AddMessageToCurrentSession(content, ChatRole.User);
+            CurrentSession?.NotifyUIUpdate(); // Add this line
         }
 
         /// <summary>
@@ -287,6 +288,7 @@ namespace GameApp.Services.AIChat
         public void AddAssistantMessage(string content)
         {
             AddMessageToCurrentSession(content, ChatRole.Assistant);
+            CurrentSession?.NotifyUIUpdate(); // Add this line
         }
 
         /// <summary>
