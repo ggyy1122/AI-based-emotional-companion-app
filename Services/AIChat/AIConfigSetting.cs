@@ -1,4 +1,4 @@
-namespace GameApp.Services.OpenAI
+namespace GameApp.Services.AIChat
 {
     public static class AIConfigSettings
     {

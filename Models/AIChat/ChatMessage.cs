@@ -1,4 +1,4 @@
-namespace GameApp.Services.OpenAI
+namespace GameApp.Models.AIChat
 {
     public class ChatMessage
     {

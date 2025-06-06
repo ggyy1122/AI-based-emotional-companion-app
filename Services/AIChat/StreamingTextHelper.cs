@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Markdig.Wpf;
 
-namespace GameApp.Services.OpenAI
+namespace GameApp.Services.AIChat
 {
     public class StreamingTextHelper
     {

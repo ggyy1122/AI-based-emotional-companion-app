@@ -2,9 +2,11 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.IO;
+using System.Linq;
+using GameApp.Models.AIChat;
 using GameApp.Services.Interfaces;
 
-namespace GameApp.Services.OpenAI
+namespace GameApp.Services.AIChat
 {
     public class OpenAIService : IAIService
     {
