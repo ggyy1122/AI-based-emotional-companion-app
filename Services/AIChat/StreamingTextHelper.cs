@@ -12,6 +12,9 @@ namespace GameApp.Services.AIChat
         private Border _container;
         private ScrollViewer _scrollViewer;
 
+        private string _lastContent = string.Empty; // ADD THIS LINE
+
+
         public StreamingTextHelper(MarkdownViewer markdownViewer, Border container, ScrollViewer scrollViewer)
         {
             _markdownViewer = markdownViewer;
@@ -29,15 +32,58 @@ namespace GameApp.Services.AIChat
             {
                 try
                 {
+                    _lastContent = markdownText;
                     _markdownViewer.Markdown = markdownText;
                     _scrollViewer.ScrollToEnd();
                 }
                 catch (Exception)
                 {
                     // Fallback to plain text if markdown parsing fails
+                    _lastContent = markdownText;
                     _markdownViewer.Markdown = $"```\n{markdownText}\n```";
                 }
             });
+        }
+
+        /// <summary>
+        /// Add stopped indicator to current content
+        /// </summary>
+        public void AddStoppedIndicator()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // If still showing "Thinking..." or empty, replace it
+                    if (_lastContent == "*Thinking...*" || string.IsNullOrEmpty(_lastContent))
+                    {
+                        _lastContent = "*(stopped)*";
+                        _markdownViewer.Markdown = "*(stopped)*";
+                    }
+                    else
+                    {
+                        // Append stopped indicator to existing content
+                        _lastContent = $"{_lastContent}\n\n*(stopped)*";
+                        _markdownViewer.Markdown = _lastContent;
+                    }
+
+                    _scrollViewer.ScrollToEnd();
+                }
+                catch (Exception)
+                {
+                    // Fallback
+                    _lastContent = "*(stopped)*";
+                    _markdownViewer.Markdown = "*(stopped)*";
+                }
+            });
+        }
+
+        /// <summary>
+        /// Get the current content including any stopped indicator
+        /// </summary>
+        public string GetCurrentContent()
+        {
+            return _lastContent;
         }
 
         /// <summary>

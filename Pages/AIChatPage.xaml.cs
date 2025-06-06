@@ -260,6 +260,8 @@ namespace GameApp.Pages
             StopButton.IsEnabled = true;
             _cancelTokenSource = new CancellationTokenSource();
 
+            StreamingTextHelper streamingHelper = null;
+
             try
             {
                 // Add user message to session and UI
@@ -275,7 +277,7 @@ namespace GameApp.Pages
                 Border streamingBorder = StreamingTextHelper.CreateStreamingMarkdownContainer(
                     MessagesPanel, ChatScrollViewer, out streamingViewer);
 
-                var streamingHelper = new StreamingTextHelper(streamingViewer, streamingBorder, ChatScrollViewer);
+                streamingHelper = new StreamingTextHelper(streamingViewer, streamingBorder, ChatScrollViewer);
 
                 string fullResponse = string.Empty;
 
@@ -295,6 +297,15 @@ namespace GameApp.Pages
                     _sessionManager.AddAssistantMessage(fullResponse);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                // Handle cancellation - add "(stopped)" indicator
+                streamingHelper?.AddStoppedIndicator();
+
+                // Get the final content with stopped indicator for session storage
+                var finalContent = streamingHelper?.GetCurrentContent() ?? "*(stopped)*";
+                _sessionManager.AddAssistantMessage(finalContent);
+            }
             catch (Exception ex)
             {
                 var errorMessage = $"**Sorry, an error occurred:** {ex.Message}";
@@ -307,10 +318,6 @@ namespace GameApp.Pages
                 StopButton.IsEnabled = false;
             }
         }
-
-        // Keep all your existing methods for message display and button actions
-        // (AddUserMessage, AddAIMessage, AddAIMessageFallback, etc.)
-        // ... existing methods remain unchanged ...
 
         #endregion
 

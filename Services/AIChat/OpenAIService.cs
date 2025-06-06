@@ -163,7 +163,7 @@ namespace GameApp.Services.AIChat
             }
             catch (OperationCanceledException)
             {
-                // Normal cancellation, no action needed
+                throw;
             }
             catch (Exception ex)
             {

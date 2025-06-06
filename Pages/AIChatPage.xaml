@@ -49,25 +49,49 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}"
+                                        <Border x:Name="ButtonBorder"
+                                                Background="#4A90E2"
                                                 CornerRadius="6">
                                             <ContentPresenter HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"/>
                                         </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver"
+                                                     Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                                        Property="Background"
+                                                        Value="#6BB6FF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed"
+                                                     Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                                        Property="Background"
+                                                        Value="#2970C7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
                             </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                         Value="True">
+                                    <Setter Property="Cursor"
+                                            Value="Hand"/>
+                                </Trigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="+"
                                    Foreground="White"
-                                   FontSize="16"
+                                   FontSize="20"
                                    FontWeight="Bold"
-                                   Margin="0,0,8,0"/>
+                                   Margin="0,0,10,0"
+                                   VerticalAlignment="Center"/>
                         <TextBlock Text="New Chat"
                                    Foreground="White"
-                                   FontSize="12"/>
+                                   FontSize="16"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
