@@ -1,8 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using GameApp.Services.OpenAI;
+using GameApp.Services.AIChat;
 using GameApp.Services.Interfaces;
+using GameApp.Models.AIChat;
 using Markdig.Wpf;
 
 namespace GameApp.Pages
@@ -12,8 +13,9 @@ namespace GameApp.Pages
         // Flag to track if text is placeholder
         private bool isPlaceholderText = true;
 
-        // AI service
+        // Services
         private readonly IAIService _aiService;
+        private readonly SessionManager _sessionManager;
 
         // Cancellation token source for stopping responses
         private CancellationTokenSource _cancelTokenSource;
@@ -25,28 +27,203 @@ namespace GameApp.Pages
         {
             InitializeComponent();
 
-            // Initialize AI service
+            // Initialize services
             _aiService = new OpenAIService();
+            _sessionManager = SessionManager.Instance;
 
             // Initialize cancellation token source
             _cancelTokenSource = new CancellationTokenSource();
 
-            // Set up event handlers for buttons
+            // Set up event handlers
             AttachButton.Click += AttachButton_Click;
             VoiceInputButton.Click += VoiceInputButton_Click;
             StopButton.Click += StopButton_Click;
             SendButton.Click += SendButton_Click;
-
-            // Setup placeholder text behavior
             MessageInput.GotFocus += MessageInput_GotFocus;
             MessageInput.LostFocus += MessageInput_LostFocus;
-
-            // Add initial message (welcome message) with markdown
-            AddAIMessage("Hello! I'm your AI assistant. How can I help you today?\n\nFeel free to ask me anything!");
-
-            // Set up key event for text box
             MessageInput.KeyDown += MessageInput_KeyDown;
+
+            // Initialize session UI
+            InitializeSessionUI();
         }
+
+        #region Session Management
+
+        /// <summary>
+        /// Initialize session UI components
+        /// </summary>
+        private void InitializeSessionUI()
+        {
+            // Bind sessions to ListBox
+            SessionsList.ItemsSource = _sessionManager.Sessions;
+
+            // Subscribe to session manager events
+            _sessionManager.SessionChanged += OnSessionChanged;
+
+            // Load current session
+            if (_sessionManager.CurrentSession != null)
+            {
+                SessionsList.SelectedItem = _sessionManager.CurrentSession;
+                LoadSessionMessages(_sessionManager.CurrentSession);
+                UpdateCurrentSessionTitle(_sessionManager.CurrentSession.Name);
+            }
+        }
+
+        /// <summary>
+        /// Handle session change events
+        /// </summary>
+        private void OnSessionChanged(ChatSession newSession)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                LoadSessionMessages(newSession);
+                UpdateCurrentSessionTitle(newSession.Name);
+                SessionsList.SelectedItem = newSession;
+            });
+        }
+
+        /// <summary>
+        /// Load messages from session into chat UI
+        /// </summary>
+        private void LoadSessionMessages(ChatSession session)
+        {
+            MessagesPanel.Children.Clear();
+
+            foreach (var message in session.Messages)
+            {
+                if (message.Role == ChatRole.User)
+                {
+                    AddUserMessage(message.Content);
+                }
+                else if (message.Role == ChatRole.Assistant)
+                {
+                    AddAIMessage(message.Content);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update header title with current session name
+        /// </summary>
+        private void UpdateCurrentSessionTitle(string sessionName)
+        {
+            CurrentSessionTitle.Text = sessionName ?? "AI Assistant";
+        }
+
+        /// <summary>
+        /// Create new chat session
+        /// </summary>
+        private void NewChatButton_Click(object sender, RoutedEventArgs e)
+        {
+            _sessionManager.CreateNewSession();
+        }
+
+        /// <summary>
+        /// Handle session selection change
+        /// </summary>
+        private void SessionsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SessionsList.SelectedItem is ChatSession selectedSession)
+            {
+                _sessionManager.SwitchToSession(selectedSession);
+            }
+        }
+
+        /// <summary>
+        /// Show context menu for session operations
+        /// </summary>
+        private void SessionMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is ChatSession session)
+            {
+                ShowSessionContextMenu(button, session);
+            }
+        }
+
+        /// <summary>
+        /// Display context menu with session options
+        /// </summary>
+        private void ShowSessionContextMenu(Button button, ChatSession session)
+        {
+            var contextMenu = new ContextMenu();
+
+            // Rename option
+            var renameItem = new MenuItem { Header = "Rename" };
+            renameItem.Click += (s, e) => RenameSession(session);
+            contextMenu.Items.Add(renameItem);
+
+            // Delete option (only if more than one session)
+            if (_sessionManager.Sessions.Count > 1)
+            {
+                var deleteItem = new MenuItem { Header = "Delete" };
+                deleteItem.Click += (s, e) => DeleteSession(session);
+                contextMenu.Items.Add(deleteItem);
+            }
+
+            // Clear messages option
+            var clearItem = new MenuItem { Header = "Clear Messages" };
+            clearItem.Click += (s, e) => ClearSessionMessages(session);
+            contextMenu.Items.Add(clearItem);
+
+            contextMenu.PlacementTarget = button;
+            contextMenu.IsOpen = true;
+        }
+
+        /// <summary>
+        /// Rename a session using simple dialog
+        /// </summary>
+        private void RenameSession(ChatSession session)
+        {
+            var newName = SimpleDialog.ShowInput("Rename Session", "Enter new session name:", session.Name);
+
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                _sessionManager.RenameSession(session, newName);
+                UpdateCurrentSessionTitle(session.Name);
+            }
+        }
+
+        /// <summary>
+        /// Delete a session with confirmation
+        /// </summary>
+        private void DeleteSession(ChatSession session)
+        {
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete '{session.Name}'?",
+                "Delete Session",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _sessionManager.DeleteSession(session);
+            }
+        }
+
+        /// <summary>
+        /// Clear messages from session with confirmation
+        /// </summary>
+        private void ClearSessionMessages(ChatSession session)
+        {
+            var result = MessageBox.Show(
+                $"Clear all messages in '{session.Name}'?",
+                "Clear Messages",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _sessionManager.ClearSession(session);
+                if (_sessionManager.CurrentSession == session)
+                {
+                    LoadSessionMessages(session);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Existing Methods (Message Display, Button Actions, etc.)
 
         private void BackToMainPage_Click(object sender, RoutedEventArgs e)
         {
@@ -56,25 +233,86 @@ namespace GameApp.Pages
                 this.NavigationService.Navigate(new MainPage());
         }
 
+        /// <summary>
+        /// Process a message and generate response
+        /// </summary>
+        private async void ProcessMessage(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || isPlaceholderText || isResponseInProgress)
+                return;
+
+            isResponseInProgress = true;
+            StopButton.IsEnabled = true;
+            _cancelTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                // Add user message to session and UI
+                _sessionManager.AddUserMessage(message);
+                AddUserMessage(message);
+
+                // Clear input
+                MessageInput.Text = string.Empty;
+                isPlaceholderText = false;
+
+                // Create streaming container
+                MarkdownViewer streamingViewer;
+                Border streamingBorder = StreamingTextHelper.CreateStreamingMarkdownContainer(
+                    MessagesPanel, ChatScrollViewer, out streamingViewer);
+
+                var streamingHelper = new StreamingTextHelper(streamingViewer, streamingBorder, ChatScrollViewer);
+
+                string fullResponse = string.Empty;
+
+                // Use streaming completion
+                await _aiService.StreamCompletionAsync(
+                    message,
+                    (partialResponse) =>
+                    {
+                        fullResponse = partialResponse;
+                        streamingHelper.UpdateStreamingMarkdown(partialResponse);
+                    },
+                    _cancelTokenSource.Token);
+
+                // Add complete response to session
+                if (!string.IsNullOrEmpty(fullResponse))
+                {
+                    _sessionManager.AddAssistantMessage(fullResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = $"**Sorry, an error occurred:** {ex.Message}";
+                AddAIMessage(errorMessage);
+                _sessionManager.AddAssistantMessage(errorMessage);
+            }
+            finally
+            {
+                isResponseInProgress = false;
+                StopButton.IsEnabled = false;
+            }
+        }
+
+        // Keep all your existing methods for message display and button actions
+        // (AddUserMessage, AddAIMessage, AddAIMessageFallback, etc.)
+        // ... existing methods remain unchanged ...
+
+        #endregion
+
         #region Message Display Methods
 
-        /// <summary>
-        /// Add a user message to the chat window with proper chat bubble styling
-        /// </summary>
         private void AddUserMessage(string message)
         {
-            // Create message container with chat bubble styling
             Border messageBorder = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4A90E2")),
                 Padding = new Thickness(12),
-                Margin = new Thickness(80, 5, 10, 5), // More space on left, less on right
+                Margin = new Thickness(80, 5, 10, 5),
                 HorizontalAlignment = HorizontalAlignment.Right,
-                CornerRadius = new CornerRadius(18, 18, 4, 18), // Chat bubble style
-                MaxWidth = 1000 // Limit width for better chat appearance
+                CornerRadius = new CornerRadius(18, 18, 4, 18),
+                MaxWidth = 1000
             };
 
-            // Use TextBox for user messages (selectable text)
             TextBox messageText = new TextBox
             {
                 Text = message,
@@ -90,45 +328,33 @@ namespace GameApp.Pages
                 FontSize = 14,
             };
 
-            // Remove focus border
             messageText.FocusVisualStyle = null;
 
-            // Add context menu for copying
             var contextMenu = new ContextMenu();
             var copyItem = new MenuItem { Header = "Copy" };
             copyItem.Click += (s, e) => Clipboard.SetText(messageText.Text);
             contextMenu.Items.Add(copyItem);
             messageText.ContextMenu = contextMenu;
 
-            // Add text to container
             messageBorder.Child = messageText;
-
-            // Add to message panel
             MessagesPanel.Children.Add(messageBorder);
-
-            // Scroll to bottom
             ChatScrollViewer.ScrollToEnd();
         }
 
-        /// <summary>
-        /// Add an AI message to the chat window with markdown support
-        /// </summary>
         private void AddAIMessage(string message)
         {
             try
             {
-                // Create message container with chat bubble styling
                 Border messageBorder = new Border
                 {
                     Background = new SolidColorBrush(Colors.LightGray),
                     Padding = new Thickness(12),
-                    Margin = new Thickness(10, 5, 80, 5), // Less space on left, more on right
+                    Margin = new Thickness(10, 5, 80, 5),
                     HorizontalAlignment = HorizontalAlignment.Left,
-                    CornerRadius = new CornerRadius(18, 18, 18, 4), // Chat bubble style
-                    MaxWidth = 1000 // Limit width for better chat appearance
+                    CornerRadius = new CornerRadius(18, 18, 18, 4),
+                    MaxWidth = 1000
                 };
 
-                // Use MarkdownViewer for AI messages
                 var markdownViewer = new MarkdownViewer
                 {
                     Markdown = message,
@@ -139,32 +365,22 @@ namespace GameApp.Pages
                     FontSize = 14,
                 };
 
-                // Add context menu for copying
                 var contextMenu = new ContextMenu();
                 var copyItem = new MenuItem { Header = "Copy" };
                 copyItem.Click += (s, e) => Clipboard.SetText(message);
                 contextMenu.Items.Add(copyItem);
                 markdownViewer.ContextMenu = contextMenu;
 
-                // Add to container
                 messageBorder.Child = markdownViewer;
-
-                // Add to message panel
                 MessagesPanel.Children.Add(messageBorder);
-
-                // Scroll to bottom
                 ChatScrollViewer.ScrollToEnd();
             }
             catch (Exception)
             {
-                // Fallback to TextBox if MarkdownViewer fails
                 AddAIMessageFallback(message);
             }
         }
 
-        /// <summary>
-        /// Fallback method when markdown rendering fails
-        /// </summary>
         private void AddAIMessageFallback(string message)
         {
             Border messageBorder = new Border
@@ -174,7 +390,7 @@ namespace GameApp.Pages
                 Margin = new Thickness(10, 5, 80, 5),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 CornerRadius = new CornerRadius(18, 18, 18, 4),
-                MaxWidth = 1000 // Limit width for better chat appearance
+                MaxWidth = 1000
             };
 
             TextBox messageText = new TextBox
@@ -205,63 +421,6 @@ namespace GameApp.Pages
             ChatScrollViewer.ScrollToEnd();
         }
 
-        /// <summary>
-        /// Process a message and generate a streaming response
-        /// </summary>
-        private async void ProcessMessage(string message)
-        {
-            if (string.IsNullOrWhiteSpace(message) || isPlaceholderText || isResponseInProgress)
-                return;
-
-            // Set response in progress
-            isResponseInProgress = true;
-
-            // Enable stop button
-            StopButton.IsEnabled = true;
-
-            // Reset cancellation token
-            _cancelTokenSource = new CancellationTokenSource();
-
-            try
-            {
-                // Add user message
-                AddUserMessage(message);
-
-                // Clear input
-                MessageInput.Text = string.Empty;
-                isPlaceholderText = false;
-
-                // Create a streaming message container with markdown support
-                MarkdownViewer streamingViewer;
-                Border streamingBorder = StreamingTextHelper.CreateStreamingMarkdownContainer(
-                    MessagesPanel, ChatScrollViewer, out streamingViewer);
-
-                // Helper for updating the streaming text
-                var streamingHelper = new StreamingTextHelper(
-                    streamingViewer,
-                    streamingBorder,
-                    ChatScrollViewer);
-
-                // Use streaming completion
-                await _aiService.StreamCompletionAsync(
-                    message,
-                    (partialResponse) => streamingHelper.UpdateStreamingMarkdown(partialResponse),
-                    _cancelTokenSource.Token);
-            }
-            catch (Exception ex)
-            {
-                AddAIMessage($"**Sorry, an error occurred:** {ex.Message}");
-            }
-            finally
-            {
-                // Reset response in progress
-                isResponseInProgress = false;
-
-                // Disable stop button
-                StopButton.IsEnabled = false;
-            }
-        }
-
         #endregion
 
         #region Button Actions
@@ -278,7 +437,6 @@ namespace GameApp.Pages
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            // Stop the streaming response
             if (isResponseInProgress)
             {
                 _aiService.StopStreaming();
@@ -290,19 +448,15 @@ namespace GameApp.Pages
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            // Get message text
             string message = MessageInput.Text;
-
-            // Process message
             ProcessMessage(message);
         }
 
         private void MessageInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            // Send message on Enter key (without Shift for newline)
             if (e.Key == System.Windows.Input.Key.Enter && !e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftShift))
             {
-                e.Handled = true; // Prevent newline
+                e.Handled = true;
                 SendButton_Click(sender, e);
             }
         }
