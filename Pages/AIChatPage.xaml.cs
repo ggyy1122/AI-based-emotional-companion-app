@@ -1,8 +1,14 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using GameApp.Services.AIChat;
 using GameApp.Services.Interfaces;
+using GameApp.Services.Voice;
 using GameApp.Models.AIChat;
 using Markdig.Wpf;
 
@@ -16,6 +22,7 @@ namespace GameApp.Pages
         // Services
         private readonly IAIService _aiService;
         private readonly SessionManager _sessionManager;
+        private VoiceService _voiceService;
 
         // Cancellation token source for stopping responses
         private CancellationTokenSource _cancelTokenSource;
@@ -31,6 +38,9 @@ namespace GameApp.Pages
             _aiService = new OpenAIService();
             _sessionManager = SessionManager.Instance;
 
+            // Initialize voice service
+            InitializeVoiceService();
+
             // Initialize cancellation token source
             _cancelTokenSource = new CancellationTokenSource();
 
@@ -45,7 +55,49 @@ namespace GameApp.Pages
 
             // Initialize session UI
             InitializeSessionUI();
+
+            // Add cleanup event
+            this.Unloaded += Page_Unloaded;
         }
+
+        #region Voice Service Initialization
+
+        /// <summary>
+        /// Initialize voice service with error handling
+        /// </summary>
+        private void InitializeVoiceService()
+        {
+            try
+            {
+                _voiceService = new VoiceService();
+                _voiceService.StatusChanged += OnVoiceStatusChanged;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Voice service initialization failed: {ex.Message}",
+                               "Voice Service", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Handle voice status changes
+        /// </summary>
+        private void OnVoiceStatusChanged(string status)
+        {
+            // Optional: Display status in debug or status bar
+            System.Diagnostics.Debug.WriteLine($"Voice Status: {status}");
+        }
+
+        /// <summary>
+        /// Cleanup resources when page is unloaded
+        /// </summary>
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            _voiceService?.Dispose();
+            _cancelTokenSource?.Dispose();
+        }
+
+        #endregion
 
         #region Session Management
 
@@ -238,7 +290,7 @@ namespace GameApp.Pages
 
         #endregion
 
-        #region Existing Methods (Message Display, Button Actions, etc.)
+        #region Message Processing
 
         private void BackToMainPage_Click(object sender, RoutedEventArgs e)
         {
@@ -295,6 +347,12 @@ namespace GameApp.Pages
                 if (!string.IsNullOrEmpty(fullResponse))
                 {
                     _sessionManager.AddAssistantMessage(fullResponse);
+
+                    // Fix context menu for streaming message
+                    Dispatcher.Invoke(() =>
+                    {
+                        RebindContextMenuForStreamingMessage(streamingBorder, streamingViewer, fullResponse);
+                    });
                 }
             }
             catch (OperationCanceledException)
@@ -305,6 +363,20 @@ namespace GameApp.Pages
                 // Get the final content with stopped indicator for session storage
                 var finalContent = streamingHelper?.GetCurrentContent() ?? "*(stopped)*";
                 _sessionManager.AddAssistantMessage(finalContent);
+
+                // Fix context menu for cancelled message
+                if (streamingHelper != null)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        var lastBorder = MessagesPanel.Children.OfType<Border>()
+                            .LastOrDefault(b => b.HorizontalAlignment == HorizontalAlignment.Left);
+                        if (lastBorder?.Child is MarkdownViewer lastViewer)
+                        {
+                            RebindContextMenuForStreamingMessage(lastBorder, lastViewer, finalContent);
+                        }
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -316,6 +388,183 @@ namespace GameApp.Pages
             {
                 isResponseInProgress = false;
                 StopButton.IsEnabled = false;
+            }
+        }
+
+        #endregion
+
+        #region Voice Actions
+
+        /// <summary>
+        /// Read aloud plain text (for user messages)
+        /// </summary>
+        private void ReadAloudPlainText(string text)
+        {
+            if (_voiceService != null && _voiceService.IsInitialized)
+            {
+                try
+                {
+                    _voiceService.SpeakText(text);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to read message aloud: {ex.Message}",
+                                   "Read Aloud Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Voice service is not available or not initialized.\nPlease check your audio settings.",
+                               "Read Aloud", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Read aloud markdown text (for AI messages)
+        /// </summary>
+        private void ReadAloudMarkdownText(string markdownText)
+        {
+            if (_voiceService != null && _voiceService.IsInitialized)
+            {
+                try
+                {
+                    _voiceService.SpeakMarkdownText(markdownText);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to read message aloud: {ex.Message}",
+                                   "Read Aloud Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Voice service is not available or not initialized.\nPlease check your audio settings.",
+                               "Read Aloud", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        #endregion
+
+        #region Context Menu Creation
+
+        /// <summary>
+        /// Create enhanced context menu for user messages
+        /// </summary>
+        private ContextMenu CreateUserMessageContextMenu(string messageContent)
+        {
+            var contextMenu = new ContextMenu();
+
+            // Copy option
+            var copyItem = new MenuItem { Header = "Copy" };
+            copyItem.Click += (s, e) =>
+            {
+                try
+                {
+                    Clipboard.SetText(messageContent);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to copy text: {ex.Message}", "Error",
+                                   MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            };
+            contextMenu.Items.Add(copyItem);
+
+            // Add separator
+            contextMenu.Items.Add(new Separator());
+
+            // Read Aloud option for plain text
+            var readAloudItem = new MenuItem
+            {
+                Header = "🔊 Read Aloud",
+                IsEnabled = _voiceService?.IsInitialized == true
+            };
+            readAloudItem.Click += (s, e) => ReadAloudPlainText(messageContent);
+            contextMenu.Items.Add(readAloudItem);
+
+            return contextMenu;
+        }
+
+        /// <summary>
+        /// Create enhanced context menu for AI messages
+        /// </summary>
+        private ContextMenu CreateAIMessageContextMenu(string messageContent)
+        {
+            var contextMenu = new ContextMenu();
+
+            // Copy option
+            var copyItem = new MenuItem { Header = "Copy" };
+            copyItem.Click += (s, e) =>
+            {
+                try
+                {
+                    Clipboard.SetText(messageContent);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to copy text: {ex.Message}", "Error",
+                                   MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            };
+            contextMenu.Items.Add(copyItem);
+
+            // Add separator
+            contextMenu.Items.Add(new Separator());
+
+            // Read Aloud option for markdown text
+            var readAloudItem = new MenuItem
+            {
+                Header = "🔊 Read Aloud",
+                IsEnabled = _voiceService?.IsInitialized == true
+            };
+            readAloudItem.Click += (s, e) => ReadAloudMarkdownText(messageContent);
+            contextMenu.Items.Add(readAloudItem);
+
+            return contextMenu;
+        }
+
+        /// <summary>
+        /// Re-bind context menu for streaming messages after completion
+        /// </summary>
+        private void RebindContextMenuForStreamingMessage(Border messageBorder, MarkdownViewer markdownViewer, string messageContent)
+        {
+            try
+            {
+                // Create context menu for AI messages (markdown)
+                var contextMenu = CreateAIMessageContextMenu(messageContent);
+
+                // Apply context menu to both container and markdown viewer
+                markdownViewer.ContextMenu = contextMenu;
+                messageBorder.ContextMenu = contextMenu;
+
+                // Store message content for event handler
+                markdownViewer.Tag = messageContent;
+
+                // Remove old event handlers to avoid duplicates
+                markdownViewer.MouseRightButtonUp -= OnMarkdownViewerRightClick;
+
+                // Add right-click event handler
+                markdownViewer.MouseRightButtonUp += OnMarkdownViewerRightClick;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to rebind context menu: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle right-click on markdown viewer
+        /// </summary>
+        private void OnMarkdownViewerRightClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is MarkdownViewer markdownViewer)
+            {
+                var messageContent = markdownViewer.Tag as string ?? "";
+                var contextMenu = CreateAIMessageContextMenu(messageContent);
+
+                contextMenu.PlacementTarget = markdownViewer;
+                contextMenu.IsOpen = true;
+                e.Handled = true;
             }
         }
 
@@ -344,19 +593,19 @@ namespace GameApp.Pages
                 BorderThickness = new Thickness(0),
                 IsReadOnly = true,
                 IsTabStop = false,
-                Cursor = System.Windows.Input.Cursors.IBeam,
+                Cursor = Cursors.IBeam,
                 Padding = new Thickness(0),
                 Margin = new Thickness(0),
                 FontSize = 14,
+                Tag = message // Store message content
             };
 
             messageText.FocusVisualStyle = null;
 
-            var contextMenu = new ContextMenu();
-            var copyItem = new MenuItem { Header = "Copy" };
-            copyItem.Click += (s, e) => Clipboard.SetText(messageText.Text);
-            contextMenu.Items.Add(copyItem);
+            // Create enhanced context menu for user messages (plain text)
+            var contextMenu = CreateUserMessageContextMenu(message);
             messageText.ContextMenu = contextMenu;
+            messageBorder.ContextMenu = contextMenu;
 
             messageBorder.Child = messageText;
             MessagesPanel.Children.Add(messageBorder);
@@ -385,13 +634,16 @@ namespace GameApp.Pages
                     Padding = new Thickness(0),
                     Margin = new Thickness(0),
                     FontSize = 14,
+                    Tag = message // Store message content
                 };
 
-                var contextMenu = new ContextMenu();
-                var copyItem = new MenuItem { Header = "Copy" };
-                copyItem.Click += (s, e) => Clipboard.SetText(message);
-                contextMenu.Items.Add(copyItem);
+                // Create enhanced context menu for AI messages (markdown)
+                var contextMenu = CreateAIMessageContextMenu(message);
                 markdownViewer.ContextMenu = contextMenu;
+                messageBorder.ContextMenu = contextMenu;
+
+                // Add right-click event handler
+                markdownViewer.MouseRightButtonUp += OnMarkdownViewerRightClick;
 
                 messageBorder.Child = markdownViewer;
                 MessagesPanel.Children.Add(messageBorder);
@@ -424,19 +676,19 @@ namespace GameApp.Pages
                 BorderThickness = new Thickness(0),
                 IsReadOnly = true,
                 IsTabStop = false,
-                Cursor = System.Windows.Input.Cursors.IBeam,
+                Cursor = Cursors.IBeam,
                 Padding = new Thickness(0),
                 Margin = new Thickness(0),
                 FontSize = 14,
+                Tag = message // Store message content
             };
 
             messageText.FocusVisualStyle = null;
 
-            var contextMenu = new ContextMenu();
-            var copyItem = new MenuItem { Header = "Copy" };
-            copyItem.Click += (s, e) => Clipboard.SetText(messageText.Text);
-            contextMenu.Items.Add(copyItem);
+            // Create enhanced context menu for AI messages (markdown, but using fallback)
+            var contextMenu = CreateAIMessageContextMenu(message);
             messageText.ContextMenu = contextMenu;
+            messageBorder.ContextMenu = contextMenu;
 
             messageBorder.Child = messageText;
             MessagesPanel.Children.Add(messageBorder);
@@ -466,6 +718,9 @@ namespace GameApp.Pages
                 isResponseInProgress = false;
                 StopButton.IsEnabled = false;
             }
+
+            // Also stop any current speech
+            _voiceService?.StopSpeaking();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -474,9 +729,9 @@ namespace GameApp.Pages
             ProcessMessage(message);
         }
 
-        private void MessageInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void MessageInput_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Enter && !e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftShift))
+            if (e.Key == Key.Enter && !e.KeyboardDevice.IsKeyDown(Key.LeftShift))
             {
                 e.Handled = true;
                 SendButton_Click(sender, e);
