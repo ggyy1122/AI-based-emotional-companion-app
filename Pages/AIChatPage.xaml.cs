@@ -30,6 +30,9 @@ namespace GameApp.Pages
         // Flag to track if response is in progress
         private bool isResponseInProgress = false;
 
+        // Flag to track if the current message was from voice input
+        private bool isVoiceInputMessage = false;
+
         public AIChatPage()
         {
             InitializeComponent();
@@ -353,6 +356,12 @@ namespace GameApp.Pages
                     {
                         RebindContextMenuForStreamingMessage(streamingBorder, streamingViewer, fullResponse);
                     });
+
+                    if (isVoiceInputMessage)
+                    {
+                        await PlayVoiceResponseAsync(fullResponse);
+                        isVoiceInputMessage = false; // Reset flag
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -377,12 +386,16 @@ namespace GameApp.Pages
                         }
                     });
                 }
+
+                isVoiceInputMessage = false;
             }
             catch (Exception ex)
             {
                 var errorMessage = $"**Sorry, an error occurred:** {ex.Message}";
                 AddAIMessage(errorMessage);
                 _sessionManager.AddAssistantMessage(errorMessage);
+
+                isVoiceInputMessage = false;
             }
             finally
             {
@@ -440,6 +453,45 @@ namespace GameApp.Pages
             {
                 MessageBox.Show("Voice service is not available or not initialized.\nPlease check your audio settings.",
                                "Read Aloud", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Play AI response as voice automatically with delay
+        /// </summary>
+        private async Task PlayVoiceResponseAsync(string responseText)
+        {
+            try
+            {
+                // Add a small delay to ensure the response is fully displayed
+                await Task.Delay(500);
+
+                if (_voiceService != null && _voiceService.IsInitialized)
+                {
+                    // Use async method to avoid blocking UI
+                    await Task.Run(() =>
+                    {
+                        try
+                        {
+                            _voiceService.SpeakMarkdownText(responseText);
+                        }
+                        catch (Exception ex)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Auto voice playback failed: {ex.Message}");
+                            });
+                        }
+                    });
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Voice service not available for auto-playback");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in auto voice playback: {ex.Message}");
             }
         }
 
@@ -704,11 +756,13 @@ namespace GameApp.Pages
             MessageBox.Show("Attach file feature will be implemented here.");
         }
 
+        // Replace the existing VoiceInputButton_Click method (around line 730)
+
         private void VoiceInputButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Show voice input dialog immediately
+                // Show voice input dialog which will automatically start listening
                 var voiceDialog = new VoiceInputDialog()
                 {
                     Owner = Window.GetWindow(this),
@@ -723,6 +777,11 @@ namespace GameApp.Pages
                     // Set the message in the input box
                     MessageInput.Text = voiceDialog.MessageText;
                     isPlaceholderText = false;
+
+                    // ADD THIS LINE: Mark this as a voice input message
+                    isVoiceInputMessage = true;
+
+                    // Process the message immediately
                     ProcessMessage(voiceDialog.MessageText);
                 }
             }
@@ -750,6 +809,7 @@ namespace GameApp.Pages
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             string message = MessageInput.Text;
+            isVoiceInputMessage = false;
             ProcessMessage(message);
         }
 

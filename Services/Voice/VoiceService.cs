@@ -154,7 +154,7 @@ namespace GameApp.Services.Voice
         private void OnSpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
             // Set confidence threshold to improve accuracy
-            if (e.Result.Confidence > 0.6)
+            if (e.Result.Confidence > 0)
             {
                 // Stop listening after recognition
                 StopListening();
