@@ -21,6 +21,7 @@ namespace GameApp.Services.Voice
         public event Action<string> StatusChanged;
         public event Action SpeechStarted;
         public event Action SpeechCompleted;
+        public event Action<bool> ListeningStateChanged;
 
         // Properties
         public bool IsListening => _isListening;
@@ -104,6 +105,7 @@ namespace GameApp.Services.Voice
                 {
                     _recognizer.RecognizeAsync(RecognizeMode.Multiple);
                     _isListening = true;
+                    ListeningStateChanged?.Invoke(true);
                     StatusChanged?.Invoke("Listening for speech...");
                 }
                 catch (Exception ex)
@@ -124,6 +126,7 @@ namespace GameApp.Services.Voice
                 {
                     _recognizer.RecognizeAsyncStop();
                     _isListening = false;
+                    ListeningStateChanged?.Invoke(false);
                     StatusChanged?.Invoke("Speech recognition stopped");
                 }
                 catch (Exception ex)
@@ -133,11 +136,29 @@ namespace GameApp.Services.Voice
             }
         }
 
+        /// <summary>
+        /// Toggle listening state
+        /// </summary>
+        public void ToggleListening()
+        {
+            if (_isListening)
+            {
+                StopListening();
+            }
+            else
+            {
+                StartListening();
+            }
+        }
+
         private void OnSpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
             // Set confidence threshold to improve accuracy
             if (e.Result.Confidence > 0.6)
             {
+                // Stop listening after recognition
+                StopListening();
+
                 SpeechRecognized?.Invoke(e.Result.Text);
                 StatusChanged?.Invoke($"Recognized: {e.Result.Text} (Confidence: {e.Result.Confidence:P})");
             }
@@ -155,6 +176,7 @@ namespace GameApp.Services.Voice
         private void OnRecognizeCompleted(object sender, RecognizeCompletedEventArgs e)
         {
             _isListening = false;
+            ListeningStateChanged?.Invoke(false);
             StatusChanged?.Invoke("Speech recognition completed");
         }
 

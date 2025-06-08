@@ -706,7 +706,31 @@ namespace GameApp.Pages
 
         private void VoiceInputButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Voice input feature will be implemented here.");
+            try
+            {
+                // Show voice input dialog immediately
+                var voiceDialog = new VoiceInputDialog()
+                {
+                    Owner = Window.GetWindow(this),
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                // Show dialog and get result
+                bool? result = voiceDialog.ShowDialog();
+
+                if (result == true && voiceDialog.SendMessage && !string.IsNullOrWhiteSpace(voiceDialog.MessageText))
+                {
+                    // Set the message in the input box
+                    MessageInput.Text = voiceDialog.MessageText;
+                    isPlaceholderText = false;
+                    ProcessMessage(voiceDialog.MessageText);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening voice input dialog: {ex.Message}",
+                               "Voice Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
