@@ -107,7 +107,12 @@ namespace GameApp.Services.AIChat
         public ChatSession CreateNewSession(string name = null)
         {
             var session = new ChatSession(name);
-
+            //DataBase Operation
+            using (var db = new ChatDbService())
+            {
+                db.SaveSession(session); // 包含会话信息和初始消息
+            }
+            //Memory Operation
             // Add to the beginning of the collection (most recent first)
             Sessions.Insert(0, session);
 
@@ -160,35 +165,48 @@ namespace GameApp.Services.AIChat
             // Prevent deleting the last session - always keep at least one
             if (Sessions.Count <= 1)
             {
-                // Clear the session instead of deleting it
+                // Clear the session instead of deleting it ,this method has connected to database
                 ClearSession(session);
                 return false;
             }
 
-            // Store reference for event notification
-            var deletedSession = session;
-
-            // Remove from collection
-            Sessions.Remove(session);
-
-            // If we're deleting the current session, switch to another one
-            if (CurrentSession == session)
+            using (var db = new ChatDbService())
             {
-                var newCurrentSession = Sessions.FirstOrDefault();
-                if (newCurrentSession != null)
+                // Begin transaction to ensure atomicity
+                using (var transaction = db.Connection.BeginTransaction())
                 {
-                    SwitchToSession(newCurrentSession);
-                }
-                else
-                {
-                    CurrentSession = null;
+                    try
+                    {
+                        // 1.Note: This step can be omitted due to ON DELETE CASCADE
+                        // db.ExecuteNonQuery("DELETE FROM ChatMessages WHERE SessionId = @id", 
+                        //     new { id = session.Id });
+
+                        db.DeleteSession(session.Id);
+                        // 2.Delete session record
+                      
+
+                        transaction.Commit();
+
+                        // 3.Update in-memory state
+                        var deletedSession = session;
+                        Sessions.Remove(session);
+
+                        if (CurrentSession == session)
+                        {
+                            CurrentSession = Sessions.FirstOrDefault();
+                        }
+                        // 4.Trigger event
+                        SessionDeleted?.Invoke(deletedSession);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Failed to delete session: {ex.Message}");
+                        return false;
+                    }
                 }
             }
-
-            // Notify listeners
-            SessionDeleted?.Invoke(deletedSession);
-
-            return true;
         }
 
         /// <summary>
@@ -204,6 +222,20 @@ namespace GameApp.Services.AIChat
 
             var oldName = session.Name;
             session.Name = newName.Trim();
+            session.LastUpdated = DateTime.Now; // 更新修改时间
+
+            // 同步更新数据库
+            using (var db = new ChatDbService())
+            {
+                db.ExecuteNonQuery(
+                    "UPDATE ChatSessions SET Name = @name, LastUpdated = @lastUpdated WHERE Id = @id",
+                    new
+                    {
+                        name = session.Name,
+                        lastUpdated = session.LastUpdated.ToString("o"),
+                        id = session.Id
+                    });
+            }
 
             // Notify listeners
             SessionRenamed?.Invoke(session, oldName);
@@ -217,11 +249,46 @@ namespace GameApp.Services.AIChat
         /// <param name="session">Session to clear</param>
         public void ClearSession(ChatSession session)
         {
-            if (session != null)
+            if (session == null) return;
+
+            using (var db = new ChatDbService())
             {
-                session.Messages.Clear();
-                session.Name = "New Chat";
-                session.LastUpdated = DateTime.Now;
+                // 开启事务确保原子性
+                using (var transaction = db.Connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. 删除所有关联消息
+                        db.ExecuteNonQuery(
+                            "DELETE FROM ChatMessages WHERE SessionId = @id",
+                            new { id = session.Id });
+
+                        // 2. 更新会话信息
+                        db.ExecuteNonQuery(
+                            @"UPDATE ChatSessions 
+                      SET Name = @name, 
+                          LastUpdated = @lastUpdated 
+                      WHERE Id = @id",
+                            new
+                            {
+                                name = "New Chat",
+                                lastUpdated = DateTime.Now.ToString("o"),
+                                id = session.Id
+                            });
+
+                        transaction.Commit();
+
+                        // 3. 更新内存状态
+                        session.Messages.Clear();
+                        session.Name = "New Chat";
+                        session.LastUpdated = DateTime.Now;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // 重新抛出异常
+                    }
+                }
             }
         }
 
@@ -269,6 +336,10 @@ namespace GameApp.Services.AIChat
             var message = new ChatMessage(role, content);
             CurrentSession.Messages.Add(message);
             CurrentSession.LastUpdated = DateTime.Now;
+            using (var db = new ChatDbService())
+            {
+                db.SaveMessage(CurrentSession.Id, message);
+            }
         }
 
         /// <summary>
@@ -307,6 +378,12 @@ namespace GameApp.Services.AIChat
         {
             if (CurrentSession != null)
             {
+                using (var db = new ChatDbService())
+                {
+                    db.ExecuteNonQuery(
+                        "DELETE FROM ChatMessages WHERE SessionId = @id",
+                        new { id = CurrentSession.Id });
+                }
                 ClearSession(CurrentSession);
             }
         }
@@ -412,14 +489,32 @@ namespace GameApp.Services.AIChat
         /// </summary>
         private void InitializeWithDefaultSession()
         {
-            if (Sessions.Count == 0)
+            // 优先从数据库加载
+            using (var db = new ChatDbService())
             {
-                var defaultSession = new ChatSession("Welcome Chat");
-                defaultSession.AddAssistantMessage("Hello! I'm your AI assistant. How can I help you today?");
-
-                Sessions.Add(defaultSession);
-                CurrentSession = defaultSession;
+                var savedSessions = db.LoadAllSessions();
+                if (savedSessions.Count > 0)
+                {
+                    foreach (var session in savedSessions)
+                    {
+                        Sessions.Add(session); // 加载到内存
+                    }
+                    CurrentSession = Sessions.First(); // 默认选中第一个
+                    return;
+                }
             }
+
+            // 无数据时创建默认会话（并保存到数据库）
+            var defaultSession = new ChatSession("Welcome Chat");
+            defaultSession.AddAssistantMessage("Hello! How can I help you?");
+
+            using (var db = new ChatDbService())
+            {
+                db.SaveSession(defaultSession); // 持久化默认会话
+            }
+
+            Sessions.Add(defaultSession);
+            CurrentSession = defaultSession;
         }
 
         /// <summary>
