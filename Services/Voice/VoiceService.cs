@@ -2,6 +2,7 @@ using System;
 using System.Speech.Recognition;
 using System.Speech.Synthesis;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GameApp.Services.Voice
 {
@@ -15,6 +16,9 @@ namespace GameApp.Services.Voice
         private bool _isListening = false;
         private bool _isSpeaking = false;
         private bool _isInitialized = false;
+
+        // Confidence threshold for speech recognition
+        private const float CONFIDENCE_THRESHOLD = 0.10f;
 
         // Events
         public event Action<string> SpeechRecognized;
@@ -153,19 +157,67 @@ namespace GameApp.Services.Voice
 
         private void OnSpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
-            // Set confidence threshold to improve accuracy
-            if (e.Result.Confidence > 0)
+            // Check confidence threshold
+            if (e.Result.Confidence >= CONFIDENCE_THRESHOLD)
             {
-                // Stop listening after recognition
+                // High confidence - accept the result
                 StopListening();
-
                 SpeechRecognized?.Invoke(e.Result.Text);
                 StatusChanged?.Invoke($"Recognized: {e.Result.Text} (Confidence: {e.Result.Confidence:P})");
             }
             else
             {
-                StatusChanged?.Invoke($"Low confidence recognition rejected: {e.Result.Confidence:P}");
+                // Low confidence - show dialog for user decision
+                HandleLowConfidenceResult(e.Result.Text, e.Result.Confidence);
             }
+        }
+
+        /// <summary>
+        /// Handle low confidence speech recognition results
+        /// </summary>
+        private void HandleLowConfidenceResult(string recognizedText, float confidence)
+        {
+            // Stop listening while showing dialog
+            StopListening();
+
+            StatusChanged?.Invoke($"Low confidence recognition: {recognizedText} ({confidence:P})");
+
+            // Show dialog on UI thread
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var result = MessageBox.Show(
+                    $"Low confidence speech recognition:\n\n" +
+                    $"Recognized: \"{recognizedText}\"\n" +
+                    $"Confidence: {confidence:P}\n\n" +
+                    $"Do you want to keep this result?\n\n" +
+                    $"• Yes: Use this recognition result\n" +
+                    $"• No: Discard and try again\n" +
+                    $"• Cancel: Stop voice input",
+                    "Low Confidence Recognition",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question,
+                    MessageBoxResult.No);
+
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        // Accept the low confidence result
+                        SpeechRecognized?.Invoke(recognizedText);
+                        StatusChanged?.Invoke($"Accepted low confidence result: {recognizedText}");
+                        break;
+
+                    case MessageBoxResult.No:
+                        // Restart listening for better recognition
+                        StatusChanged?.Invoke("Discarded low confidence result. Please try speaking again.");
+                        StartListening();
+                        break;
+
+                    case MessageBoxResult.Cancel:
+                        // User wants to cancel voice input entirely
+                        StatusChanged?.Invoke("Voice input cancelled by user");
+                        break;
+                }
+            });
         }
 
         private void OnSpeechRejected(object sender, SpeechRecognitionRejectedEventArgs e)
