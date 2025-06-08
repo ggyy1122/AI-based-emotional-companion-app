@@ -4,136 +4,321 @@
       Title="AI Voice Interaction">
 
     <Grid Background="#F8F9FA">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <!-- Header -->
-            <RowDefinition Height="*"/>
-            <!-- Chat content -->
-            <RowDefinition Height="Auto"/>
-            <!-- Input area -->
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <!-- Session sidebar -->
+            <ColumnDefinition Width="*"/>
+            <!-- Chat area -->
+        </Grid.ColumnDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0"
-                Background="#4A90E2"
-                Padding="10,8">
+        <!-- Session Sidebar -->
+        <Border Grid.Column="0"
+                Background="#2C2C2E"
+                BorderBrush="#404040"
+                BorderThickness="0,0,1,0">
             <Grid>
-                <!-- Back Button with Image -->
-                <Button Click="BackToMainPage_Click"
-                        HorizontalAlignment="Left"
-                        Background="Transparent"
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- Header -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- New chat button -->
+                    <RowDefinition Height="*"/>
+                    <!-- Sessions list -->
+                </Grid.RowDefinitions>
+
+                <!-- Sidebar Header -->
+                <Border Grid.Row="0"
+                        Background="#1E1E20"
+                        Padding="16,12">
+                    <TextBlock Text="Chat Sessions"
+                               Foreground="White"
+                               FontSize="14"
+                               FontWeight="SemiBold"/>
+                </Border>
+
+                <!-- New Chat Button -->
+                <Button Grid.Row="1"
+                        x:Name="NewChatButton"
+                        Margin="12"
+                        Padding="12,8"
+                        Background="#4A90E2"
                         BorderThickness="0"
-                        Margin="8,0,0,0">
-                    <Image Source="/Resources/ChatPage/home.png"
-                           Width="20"
-                           Height="20"/>
+                        Click="NewChatButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="ButtonBorder"
+                                                Background="#4A90E2"
+                                                CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver"
+                                                     Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                                        Property="Background"
+                                                        Value="#6BB6FF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed"
+                                                     Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                                        Property="Background"
+                                                        Value="#2970C7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                         Value="True">
+                                    <Setter Property="Cursor"
+                                            Value="Hand"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="+"
+                                   Foreground="White"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Margin="0,0,10,0"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="New Chat"
+                                   Foreground="White"
+                                   FontSize="16"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
 
-                <TextBlock Text="AI Assistant"
-                           Foreground="White"
-                           FontSize="16"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
+                <!-- Sessions List -->
+                <ScrollViewer Grid.Row="2"
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="8,0,8,8">
+                    <ListBox x:Name="SessionsList"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             SelectionChanged="SessionsList_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding"
+                                        Value="0"/>
+                                <Setter Property="Margin"
+                                        Value="0,2"/>
+                                <Setter Property="Background"
+                                        Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6"
+                                                    Padding="8">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected"
+                                                         Value="True">
+                                                    <Setter Property="Background"
+                                                            Value="#404040"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver"
+                                                         Value="True">
+                                                    <Setter Property="Background"
+                                                            Value="#353535"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Session Info -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Name, Mode=OneWay}"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   FontWeight="Medium"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="180"/>
+                                        <TextBlock Text="{Binding PreviewText, Mode=OneWay}"
+                                                   Foreground="#999999"
+                                                   FontSize="10"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="180"
+                                                   Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LastUpdated, StringFormat='{}{0:MMM dd, HH:mm}', Mode=OneWay}"
+                                                   Foreground="#666666"
+                                                   FontSize="9"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Menu Button -->
+                                    <Button Grid.Column="1"
+                                            x:Name="SessionMenuButton"
+                                            Width="20"
+                                            Height="20"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Click="SessionMenuButton_Click"
+                                            Tag="{Binding}"
+                                            Margin="4,0,0,0">
+                                        <TextBlock Text="⋮"
+                                                   Foreground="#999999"
+                                                   FontSize="14"
+                                                   HorizontalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
             </Grid>
         </Border>
 
-        <!-- Chat Content Area -->
-        <ScrollViewer Grid.Row="1"
-                      x:Name="ChatScrollViewer"
-                      VerticalScrollBarVisibility="Auto"
-                      Padding="12"
-                      Margin="0,0,0,5">
-            <StackPanel x:Name="MessagesPanel">
-                <!-- Messages will be added here dynamically -->
-            </StackPanel>
-        </ScrollViewer>
+        <!-- Chat Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Header -->
+                <RowDefinition Height="*"/>
+                <!-- Chat content -->
+                <RowDefinition Height="Auto"/>
+                <!-- Input area -->
+            </Grid.RowDefinitions>
 
-        <!-- Input Area -->
-        <Border Grid.Row="2"
-                Background="White"
-                Margin="0,5,0,12"
-                HorizontalAlignment="Stretch">
-            <Grid x:Name="InputGrid"
-                  MaxWidth="1000">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <!-- Header -->
+            <Border Grid.Row="0"
+                    Background="#4A90E2"
+                    Padding="10,8">
+                <Grid>
+                    <Button Click="BackToMainPage_Click"
+                            HorizontalAlignment="Left"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Margin="8,0,0,0">
+                        <Image Source="/Resources/ChatPage/home.png"
+                               Width="20"
+                               Height="20"/>
+                    </Button>
+                    <TextBlock x:Name="CurrentSessionTitle"
+                               Text="AI Assistant"
+                               Foreground="White"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                </Grid>
+            </Border>
 
-                <!-- Attach Button -->
-                <Button Grid.Column="0"
-                        x:Name="AttachButton"
-                        Width="42"
-                        Height="42"
-                        Margin="8,0,8,0"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="#E0E0E0"
-                        ToolTip="Attach File">
-                    <Image Source="/Resources/ChatPage/attach_icon.png"
-                           Width="20"
-                           Height="20"/>
-                </Button>
+            <!-- Chat Content Area -->
+            <ScrollViewer Grid.Row="1"
+                          x:Name="ChatScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          Padding="12"
+                          Margin="0,0,0,5">
+                <StackPanel x:Name="MessagesPanel">
+                    <!-- Messages will be added here dynamically -->
+                </StackPanel>
+            </ScrollViewer>
 
-                <!-- Text Input -->
-                <TextBox Grid.Column="1"
-                         x:Name="MessageInput"
-                         Height="42"
-                         Margin="0,0,8,0"
-                         TextWrapping="Wrap"
-                         VerticalContentAlignment="Center"
-                         Padding="12,0,12,0"
-                         BorderBrush="#E0E0E0"
-                         Text="Type your message here..."/>
+            <!-- Input Area -->
+            <Border Grid.Row="2"
+                    Background="White"
+                    Margin="0,5,0,12"
+                    HorizontalAlignment="Stretch">
+                <Grid x:Name="InputGrid"
+                      MaxWidth="1000">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Voice Button -->
-                <Button Grid.Column="2"
-                        x:Name="VoiceInputButton"
-                        Width="42"
-                        Height="42"
-                        Margin="0,0,8,0"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="#E0E0E0"
-                        ToolTip="Voice Input">
-                    <Image Source="/Resources/ChatPage/microphone_icon.png"
-                           Width="20"
-                           Height="20"/>
-                </Button>
+                    <!-- Attach Button -->
+                    <Button Grid.Column="0"
+                            x:Name="AttachButton"
+                            Width="42"
+                            Height="42"
+                            Margin="8,0,8,0"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#E0E0E0"
+                            ToolTip="Attach File">
+                        <Image Source="/Resources/ChatPage/attach_icon.png"
+                               Width="20"
+                               Height="20"/>
+                    </Button>
 
-                <!-- Stop Button -->
-                <Button Grid.Column="3"
-                        x:Name="StopButton"
-                        Width="42"
-                        Height="42"
-                        Margin="0,0,8,0"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="#E0E0E0"
-                        ToolTip="Stop">
-                    <Image Source="/Resources/ChatPage/stop_icon.png"
-                           Width="20"
-                           Height="20"/>
-                </Button>
+                    <!-- Text Input -->
+                    <TextBox Grid.Column="1"
+                             x:Name="MessageInput"
+                             Height="42"
+                             Margin="0,0,8,0"
+                             TextWrapping="Wrap"
+                             VerticalContentAlignment="Center"
+                             Padding="12,0,12,0"
+                             BorderBrush="#E0E0E0"
+                             Text="Type your message here..."/>
 
-                <!-- Send Button -->
-                <Button Grid.Column="4"
-                        x:Name="SendButton"
-                        Width="42"
-                        Height="42"
-                        Margin="0,0,8,0"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="#3A80D2"
-                        ToolTip="Send Message">
-                    <Image Source="/Resources/ChatPage/send_icon.png"
-                           Width="20"
-                           Height="20"/>
-                </Button>
-            </Grid>
-        </Border>
+                    <!-- Voice Button -->
+                    <Button Grid.Column="2"
+                            x:Name="VoiceInputButton"
+                            Width="42"
+                            Height="42"
+                            Margin="0,0,8,0"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#E0E0E0"
+                            ToolTip="Voice Input">
+                        <Image Source="/Resources/ChatPage/microphone_icon.png"
+                               Width="20"
+                               Height="20"/>
+                    </Button>
+
+                    <!-- Stop Button -->
+                    <Button Grid.Column="3"
+                            x:Name="StopButton"
+                            Width="42"
+                            Height="42"
+                            Margin="0,0,8,0"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#E0E0E0"
+                            ToolTip="Stop">
+                        <Image Source="/Resources/ChatPage/stop_icon.png"
+                               Width="20"
+                               Height="20"/>
+                    </Button>
+
+                    <!-- Send Button -->
+                    <Button Grid.Column="4"
+                            x:Name="SendButton"
+                            Width="42"
+                            Height="42"
+                            Margin="0,0,8,0"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#3A80D2"
+                            ToolTip="Send Message">
+                        <Image Source="/Resources/ChatPage/send_icon.png"
+                               Width="20"
+                               Height="20"/>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

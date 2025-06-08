@@ -2,9 +2,11 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.IO;
+using System.Linq;
+using GameApp.Models.AIChat;
 using GameApp.Services.Interfaces;
 
-namespace GameApp.Services.OpenAI
+namespace GameApp.Services.AIChat
 {
     public class OpenAIService : IAIService
     {
@@ -161,7 +163,7 @@ namespace GameApp.Services.OpenAI
             }
             catch (OperationCanceledException)
             {
-                // Normal cancellation, no action needed
+                throw;
             }
             catch (Exception ex)
             {
@@ -180,6 +182,39 @@ namespace GameApp.Services.OpenAI
                 _streamingCts.Cancel();
                 _streamingCts.Dispose();
                 _streamingCts = new CancellationTokenSource();
+            }
+        }
+
+        /// <summary>
+        /// Add a message to conversation history without making API call
+        /// Used for rebuilding context from session data
+        /// </summary>
+        public void AddToConversationHistory(string role, string content)
+        {
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                _conversationHistory.Add(new ChatMessage(role, content));
+            }
+        }
+
+        /// <summary>
+        /// Clear the conversation history/context while keeping system prompt
+        /// </summary>
+        public void ClearConversationHistory()
+        {
+            // Keep only the system prompt (first message)
+            var systemPrompt = _conversationHistory.FirstOrDefault(m => m.Role == ChatRole.System);
+
+            _conversationHistory.Clear();
+
+            if (systemPrompt != null)
+            {
+                _conversationHistory.Add(systemPrompt);
+            }
+            else
+            {
+                // Add default system prompt if none exists
+                _conversationHistory.Add(new ChatMessage(ChatRole.System, AIConfigSettings.SystemPrompt));
             }
         }
     }
