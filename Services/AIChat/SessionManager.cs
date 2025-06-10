@@ -125,6 +125,35 @@ namespace GameApp.Services.AIChat
             return session;
         }
 
+
+        /// <summary>
+        /// Give the special prompt to the sprite
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public string GetSystemPromptForSession(ChatSession session)
+        {
+            if (session == null)
+                return AIConfigSettings.SystemPrompt;
+
+            // 如果是精灵会话，返回特定的精灵提示词
+            if (session.IsSpecialElfSession == 1)
+            {
+                return @"
+你是一个神奇的精灵助手，拥有超凡的智慧和魔法能力。
+你的任务是：
+1. 用精灵特有的方式回答用户问题
+2. 保持可爱而友好的语气
+3. 可以适当使用精灵风格的表达方式
+4. 必要时可以提供魔法般的建议
+5. 要能温暖用户的心灵
+记住你是一个精灵，不是普通AI！";
+            }
+
+            // 默认系统提示词
+            return AIConfigSettings.SystemPrompt;
+        }
+
         /// <summary>
         /// Switch to a different session
         /// </summary>
@@ -159,7 +188,7 @@ namespace GameApp.Services.AIChat
         /// <returns>True if deletion was successful</returns>
         public bool DeleteSession(ChatSession session)
         {
-            if (session == null || !Sessions.Contains(session))
+            if (session == null || !Sessions.Contains(session)||session.IsSpecialElfSession==1)
                 return false;
 
             // Prevent deleting the last session - always keep at least one
@@ -504,17 +533,18 @@ namespace GameApp.Services.AIChat
                 }
             }
 
-            // 无数据时创建默认会话（并保存到数据库）
-            var defaultSession = new ChatSession("Welcome Chat");
-            defaultSession.AddAssistantMessage("Hello! How can I help you?");
-
+            // 无数据时创建默认精灵会话（并保存到数据库）
+            var spriteSession = new ChatSession("Sprite Chat");
+            spriteSession.AddAssistantMessage("Hello! How can I help you?");
+            spriteSession.IsSpecialElfSession = 1;
             using (var db = new ChatDbService())
             {
-                db.SaveSession(defaultSession); // 持久化默认会话
+                db.SaveSession(spriteSession); // 持久化默认会话
             }
 
-            Sessions.Add(defaultSession);
-            CurrentSession = defaultSession;
+            Sessions.Add(spriteSession);
+            CurrentSession = spriteSession;
+           
         }
 
         /// <summary>

@@ -34,7 +34,26 @@ namespace GameApp.Services.AIChat
                 // Add user message to history
                 _conversationHistory.Add(new ChatMessage(ChatRole.User, userMessage));
 
-                // Create request body
+                // 获取当前会话的系统提示词（使用SessionManager的统一方法）
+                var systemPrompt = SessionManager.Instance.GetSystemPromptForSession(
+                    SessionManager.Instance.CurrentSession);
+
+                // 确保系统提示词是对话历史中的第一条消息
+                var systemMessages = _conversationHistory.Where(m => m.Role == ChatRole.System).ToList();
+                if (systemMessages.Count == 0)
+                {
+                    _conversationHistory.Insert(0, new ChatMessage(ChatRole.System, systemPrompt));
+                }
+                else
+                {
+                    // 更新所有系统消息（理论上应该只有一条）
+                    foreach (var msg in systemMessages)
+                    {
+                        msg.Content = systemPrompt;
+                    }
+                }
+
+                // Create request body (以下保持原样)
                 var requestBody = new
                 {
                     model = AIConfigSettings.ModelName,
@@ -75,8 +94,8 @@ namespace GameApp.Services.AIChat
         }
 
         public async Task StreamCompletionAsync(
-            string userMessage,
-            Action<string> onPartialResponse,
+          string userMessage,
+           Action<string> onPartialResponse,
             CancellationToken cancellationToken = default)
         {
             // Reset cancellation token source
@@ -91,6 +110,25 @@ namespace GameApp.Services.AIChat
             {
                 // Add user message to history
                 _conversationHistory.Add(new ChatMessage(ChatRole.User, userMessage));
+
+                // 获取当前会话的系统提示词（新增代码）
+                var systemPrompt = SessionManager.Instance.GetSystemPromptForSession(
+                    SessionManager.Instance.CurrentSession);
+
+                // 确保系统提示词是对话历史中的第一条消息（新增代码）
+                var systemMessages = _conversationHistory.Where(m => m.Role == ChatRole.System).ToList();
+                if (systemMessages.Count == 0)
+                {
+                    _conversationHistory.Insert(0, new ChatMessage(ChatRole.System, systemPrompt));
+                }
+                else
+                {
+                    // 更新所有系统消息（理论上应该只有一条）（新增代码）
+                    foreach (var msg in systemMessages)
+                    {
+                        msg.Content = systemPrompt;
+                    }
+                }
 
                 // Create request body with stream=true for streaming response
                 var requestBody = new

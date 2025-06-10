@@ -51,7 +51,10 @@ namespace GameApp.Models.AIChat
                 OnPropertyChanged();
             }
         }
-
+        /// <summary>
+        /// Whether this session is a special elf session (1) or a regular one (0)
+        /// </summary>
+        public int IsSpecialElfSession { get; set; } = 0;
         /// <summary>
         /// Collection of messages in this session
         /// </summary>

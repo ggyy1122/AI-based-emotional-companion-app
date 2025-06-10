@@ -217,7 +217,7 @@ namespace GameApp.Pages
             contextMenu.Items.Add(renameItem);
 
             // Delete option (only if more than one session)
-            if (_sessionManager.Sessions.Count > 1)
+            if (session.IsSpecialElfSession==0)
             {
                 var deleteItem = new MenuItem { Header = "Delete" };
                 deleteItem.Click += (s, e) => DeleteSession(session);

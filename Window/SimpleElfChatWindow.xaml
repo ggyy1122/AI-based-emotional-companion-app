@@ -1,0 +1,23 @@
+﻿<Window x:Class="GameApp.Windows.SimpleElfChatWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="精灵对话" Height="400" Width="300"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 消息列表 -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" x:Name="MessageScrollViewer">
+            <StackPanel x:Name="MessageContainer"/>
+        </ScrollViewer>
+
+        <!-- 输入框 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
+            <TextBox x:Name="InputBox" Width="200" VerticalContentAlignment="Center"/>
+            <Button Content="发送" Margin="5,0,0,0" Click="SendButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -26,12 +26,13 @@ namespace GameApp.Services.AIChat
             {
                 ExecuteNonQuery("PRAGMA foreign_keys = ON;");
                 cmd.CommandText = @"
-                    CREATE TABLE IF NOT EXISTS ChatSessions (
-                        Id TEXT PRIMARY KEY,
-                        Name TEXT NOT NULL,
-                        CreatedAt TEXT NOT NULL,
-                        LastUpdated TEXT NOT NULL
-                    );
+                   CREATE TABLE IF NOT EXISTS ChatSessions (
+                   Id TEXT PRIMARY KEY,
+                    Name TEXT NOT NULL,
+                CreatedAt TEXT NOT NULL,
+                LastUpdated TEXT NOT NULL,
+             IsSpecialElfSession INTEGER NOT NULL DEFAULT 0
+             );
 
                     CREATE TABLE IF NOT EXISTS ChatMessages (
                         Id TEXT PRIMARY KEY,
@@ -57,13 +58,14 @@ namespace GameApp.Services.AIChat
                     {
                         cmd.CommandText = @"
                             INSERT OR REPLACE INTO ChatSessions 
-                            (Id, Name, CreatedAt, LastUpdated) 
-                            VALUES (@id, @name, @createdAt, @lastUpdated)";
+                            (Id, Name, CreatedAt, LastUpdated, IsSpecialElfSession) 
+                            VALUES (@id, @name, @createdAt, @lastUpdated, @isSpecialElfSession)";
 
                         cmd.Parameters.AddWithValue("@id", session.Id);
                         cmd.Parameters.AddWithValue("@name", session.Name);
                         cmd.Parameters.AddWithValue("@createdAt", session.CreatedAt.ToString("o"));
                         cmd.Parameters.AddWithValue("@lastUpdated", session.LastUpdated.ToString("o"));
+                        cmd.Parameters.AddWithValue("@isSpecialElfSession", session.IsSpecialElfSession);
                         cmd.ExecuteNonQuery();
                     }
 
@@ -121,7 +123,8 @@ namespace GameApp.Services.AIChat
                             Name = reader["Name"].ToString(),
                             CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
                             LastUpdated = DateTime.Parse(reader["LastUpdated"].ToString()),
-                            Messages = new ObservableCollection<ChatMessage>()
+                            Messages = new ObservableCollection<ChatMessage>(),
+                            IsSpecialElfSession = Convert.ToInt32(reader["IsSpecialElfSession"])
                         });
                     }
                 }
