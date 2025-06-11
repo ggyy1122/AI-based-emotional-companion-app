@@ -146,6 +146,28 @@
                                FontWeight="Bold"/>
                 </StackPanel>
             </Button>
+            <Button Width="120"
+        Height="80"
+        Click="GoToSpiritDashboard_Click"
+        Background="Transparent"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Padding="0"
+        Margin="0,0,0,15"
+        Style="{StaticResource NoBorderButtonStyle}">
+                <StackPanel Orientation="Vertical"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                    <Image Source="/Resources/sprite_data.png"
+               Width="48"
+               Height="48"/>
+                    <TextBlock Text="精灵数据"
+                   HorizontalAlignment="Center"
+                   Margin="0,4,0,0"
+                   Foreground="Black"
+                   FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
 
         </StackPanel>
 

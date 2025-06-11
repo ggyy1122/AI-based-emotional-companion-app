@@ -15,9 +15,22 @@
         </ScrollViewer>
 
         <!-- 输入框 -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5">
-            <TextBox x:Name="InputBox" Width="200" VerticalContentAlignment="Center"/>
-            <Button Content="发送" Margin="5,0,0,0" Click="SendButton_Click"/>
-        </StackPanel>
+        <Grid Grid.Row="1" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="InputBox" 
+             Grid.Column="0"
+             KeyDown="InputBox_KeyDown" 
+             VerticalContentAlignment="Center"/>
+
+            <Button Content="发送" 
+            Grid.Column="1"
+            Margin="5,0,0,0" 
+            Click="SendButton_Click"
+            MinWidth="60"/>
+        </Grid>
     </Grid>
 </Window>

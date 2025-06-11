@@ -404,28 +404,28 @@ namespace TowerDefenseGame
         }
 
 
-        public void SaveScore() // 保存最高分
+        public void SaveScore() // 保存当前分数
         {
             using (var connection = new SQLiteConnection(App.ConnectionString))
             {
                 connection.Open();
 
-                // 创建表（如果不存在）
+                // 创建表（如果不存在），添加Timestamp列用于记录保存时间
                 using (var createTableCmd = new SQLiteCommand(
-                    "CREATE TABLE IF NOT EXISTS GameScores (Id INTEGER PRIMARY KEY DEFAULT 1, Score INTEGER)",
+                    "CREATE TABLE IF NOT EXISTS GameScores (Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "Score INTEGER)",
                     connection))
                 {
                     createTableCmd.ExecuteNonQuery();
                 }
 
-                // 使用UPSERT语法（SQLite 3.24.0+）
-                using (var upsertCmd = new SQLiteCommand(
-                    "INSERT INTO GameScores (Id, Score) VALUES (1, @score) " +
-                    "ON CONFLICT(Id) DO UPDATE SET Score = @score",
+                // 插入新记录
+                using (var insertCmd = new SQLiteCommand(
+                    "INSERT INTO GameScores (Score) VALUES (@score)",
                     connection))
                 {
-                    upsertCmd.Parameters.AddWithValue("@score", _greatestScore);
-                    upsertCmd.ExecuteNonQuery();
+                    insertCmd.Parameters.AddWithValue("@score", _greatestScore);
+                    insertCmd.ExecuteNonQuery();
                 }
             }
         }
@@ -450,17 +450,16 @@ namespace TowerDefenseGame
                     return 0;
                 }
 
-                // 查询最高分（确保只返回一条记录）
+                // 查询最高分
                 using (var selectCmd = new SQLiteCommand(
-                    "SELECT Score FROM GameScores WHERE Id = 1 LIMIT 1",
+                    "SELECT MAX(Score) FROM GameScores",
                     connection))
                 {
                     object result = selectCmd.ExecuteScalar();
-                    return result != null ? Convert.ToInt32(result) : 0;
+                    return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
                 }
             }
         }
-
 
         private void InitializeStarfield()
         {

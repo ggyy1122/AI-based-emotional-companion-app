@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using GameApp.Models.AIChat;
 using GameApp.Services.AIChat;
@@ -194,6 +195,20 @@ namespace GameApp.Windows
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            SendMessage();
+        }
+
+        private void InputBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SendMessage();
+                e.Handled = true; // 防止回车键的默认行为（如换行）
+            }
+        }
+
+        private void SendMessage()
         {
             if (!string.IsNullOrWhiteSpace(InputBox.Text))
             {

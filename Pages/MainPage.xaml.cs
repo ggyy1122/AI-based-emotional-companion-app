@@ -21,6 +21,10 @@ namespace GameApp
         {
             this.NavigationService.Navigate(new EmotionBook());
         }
+        private void GoToSpiritDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new SpiritDashboard());
+        }
         private void GoToGame_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new GamePage());
