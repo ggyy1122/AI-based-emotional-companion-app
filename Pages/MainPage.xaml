@@ -5,6 +5,13 @@
       Title="MainPage">
 
     <Grid>
+        <Border Background="#AAFFFFFF" 
+                CornerRadius="10"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="20"
+                Padding="10">
+        </Border>
 
         <Canvas x:Name="MainCanvas"
                 MouseLeftButtonDown="MainCanvas_MouseLeftButtonDown"
@@ -21,14 +28,56 @@
             <local:SpriteControl x:Name="MySprite" Canvas.Left="100" Canvas.Top="100" Width="200" Height="200"/>
 
         </Canvas>
+        <!-- Emoji按钮面板 - 垂直排列 -->
+        <Border Background="#AA000000"
+        CornerRadius="10"
+        HorizontalAlignment="Left"
+         VerticalAlignment="Top" 
+        Margin="10"
+        Padding="10"
+        Panel.ZIndex="1">
+            <StackPanel Orientation="Vertical">
+                <!-- 添加"精灵状态栏"文字 -->
+                <TextBlock Text="精灵状态栏" 
+                   Foreground="White" 
+                   FontSize="14"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,5"/>
 
-        <!-- Right Side Button Panel -->
+                <!-- 原有按钮保持不变 -->
+                <Button x:Name="HappyEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="开心" ToolTip="开心" Margin="5">
+                    <Image Source="/Resources/Emoji/happy.png" Width="24" Height="24"/>
+                </Button>
+                <Button x:Name="PlayfulEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="调皮" ToolTip="调皮" Margin="5">
+                    <Image Source="/Resources/Emoji/playful.png" Width="24" Height="24"/>
+                </Button>
+                <Button x:Name="SleepyEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="困倦" ToolTip="困倦" Margin="5">
+                    <Image Source="/Resources/Emoji/sleepy.png" Width="24" Height="24"/>
+                </Button>
+                <Button x:Name="ExcitedEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="兴奋" ToolTip="兴奋" Margin="5">
+                    <Image Source="/Resources/Emoji/excited.png" Width="24" Height="24"/>
+                </Button>
+                <Button x:Name="ShyEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="害羞" ToolTip="害羞" Margin="5">
+                    <Image Source="/Resources/Emoji/shy.png" Width="24" Height="24"/>
+                </Button>
+                <Button x:Name="CuriousEmoji" Style="{StaticResource NoBorderButtonStyle}" 
+                Click="EmojiButton_Click" Tag="好奇" ToolTip="好奇" Margin="5">
+                    <Image Source="/Resources/Emoji/curious.png" Width="24" Height="24"/>
+                </Button>
+            </StackPanel>
+        </Border>
+
         <StackPanel Orientation="Vertical"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Margin="30,20,30,0">
 
-            <!-- Emotion Book Button -->
             <Button Width="120"
                     Height="80"
                     Click="GoToEmotionBook_Click"
@@ -52,7 +101,6 @@
                 </StackPanel>
             </Button>
 
-            <!-- Game Button -->
             <Button Width="120"
                     Height="80"
                     Click="GoToGame_Click"
@@ -76,7 +124,6 @@
                 </StackPanel>
             </Button>
 
-            <!-- AI Chat Button -->
             <Button Width="120"
                     Height="80"
                     Click="GoToAIChatPage_Click"
@@ -100,20 +147,7 @@
                 </StackPanel>
             </Button>
 
-            <!-- Example: Add more buttons easily -->
-            <!-- 
-            <Button Width="120" Height="80" Click="GoToSettings_Click"
-                    Style="{StaticResource NoBorderButtonStyle}" Margin="0,0,0,15">
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Image Source="/Resources/settings.png" Width="48" Height="48"/>
-                    <TextBlock Text="设置" HorizontalAlignment="Center" Margin="0,4,0,0" 
-                               Foreground="Black" FontWeight="Bold"/>
-                </StackPanel>
-            </Button>
-            -->
-
         </StackPanel>
 
     </Grid>
-
 </Page>

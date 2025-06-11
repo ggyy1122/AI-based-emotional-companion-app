@@ -255,5 +255,14 @@ namespace GameApp.Services.AIChat
                 _conversationHistory.Add(new ChatMessage(ChatRole.System, AIConfigSettings.SystemPrompt));
             }
         }
+
+        /// <summary>
+        /// Greeting
+        /// </summary>
+        public async Task<string> GenerateGreetingAsync(string mood)
+        {
+            string prompt = $"你是一个可爱的精灵助手，当前的心情是{mood}，用20字以内的一句话向主人打招呼";
+            return await GetCompletionAsync(prompt);
+        }
     }
 }

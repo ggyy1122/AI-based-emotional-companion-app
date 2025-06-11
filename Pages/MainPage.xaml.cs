@@ -78,5 +78,39 @@ namespace GameApp
             return false;
         }
 
+
+        private Button _lastSelectedButton; // 记录上次选中的按钮
+
+        private async void EmojiButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button currentButton && currentButton.Tag is string mood)
+            {
+                // 如果点击的是同一个按钮，不做处理
+                if (_lastSelectedButton == currentButton)
+                    return;
+
+                // 恢复上一个按钮的大小
+                if (_lastSelectedButton != null)
+                {
+                    _lastSelectedButton.FontSize = 24;
+                    ((Image)_lastSelectedButton.Content).Width = 24;
+                    ((Image)_lastSelectedButton.Content).Height = 24;
+                }
+
+                // 设置当前按钮为选中状态（变大）
+                currentButton.FontSize = 28;
+                ((Image)currentButton.Content).Width = 32;
+                ((Image)currentButton.Content).Height = 32;
+
+                // 更新最后选中的按钮
+                _lastSelectedButton = currentButton;
+
+                // 设置精灵心情
+                MySprite.SetMood(mood);
+
+                // 保持原有200ms动画效果
+                await Task.Delay(200);
+            }
+        }
     }
 }
