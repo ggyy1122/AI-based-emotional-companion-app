@@ -33,6 +33,9 @@ namespace GameApp.Pages
         // Flag to track if the current message was from voice input
         private bool isVoiceInputMessage = false;
 
+        private bool _isInFavoriteView = false;         // 当前是否在会话预览
+        private bool _isFromFavoritePreview = false;     // 是否由预览进入某会话
+
         public AIChatPage()
         {
             InitializeComponent();
@@ -189,8 +192,11 @@ namespace GameApp.Pages
         {
             if (SessionsList.SelectedItem is ChatSession selectedSession)
             {
+
+                ShowChatArea();
                 _sessionManager.SwitchToSession(selectedSession);
             }
+           
         }
 
         /// <summary>
@@ -217,7 +223,7 @@ namespace GameApp.Pages
             contextMenu.Items.Add(renameItem);
 
             // Delete option (only if more than one session)
-            if (session.IsSpecialElfSession==0)
+            if (session.IsSpecialElfSession == 0)
             {
                 var deleteItem = new MenuItem { Header = "Delete" };
                 deleteItem.Click += (s, e) => DeleteSession(session);
@@ -228,6 +234,21 @@ namespace GameApp.Pages
             var clearItem = new MenuItem { Header = "Clear Messages" };
             clearItem.Click += (s, e) => ClearSessionMessages(session);
             contextMenu.Items.Add(clearItem);
+
+            // Add favorite/unfavorite option
+            var favoriteItem = new MenuItem
+            {
+                Header = session.IsFavorite ? "Unfavorite" : "Favorite"
+            };
+            favoriteItem.Click += (s, e) =>
+            {
+                // Toggle favorite status in SessionManager (also updates database)
+                var isNowFavorite = SessionManager.Instance.ToggleFavorite(session);
+                // Update menu text immediately
+                favoriteItem.Header = isNowFavorite ? "Unfavorite" : "Favorite";
+                // Optionally: refresh UI of favorite list if needed
+            };
+            contextMenu.Items.Add(favoriteItem);
 
             contextMenu.PlacementTarget = button;
             contextMenu.IsOpen = true;
@@ -830,6 +851,78 @@ namespace GameApp.Pages
                 ? new GridLength(280)  // 展开
                 : new GridLength(0);   // 收起
             _isSidebarCollapsed = !_isSidebarCollapsed;
+        }
+
+
+        //收藏按钮
+        private void FavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isInFavoriteView = true;
+          //  _isFromFavoritePreview = false;
+            ShowFavoritePreview();
+        }
+
+        private void ShowFavoritePreview()
+        {
+            ChatAreaGrid.Visibility = Visibility.Collapsed;
+            FavoritePreviewGrid.Visibility = Visibility.Visible;
+
+            List<ChatSession> favorites;
+            using (var db = new ChatDbService())
+            {
+                favorites = db.LoadFavoriteSessions();
+                FavoritePreviewList.ItemsSource = favorites;
+            }
+            if (favorites == null || favorites.Count == 0)
+            {
+                ShowChatArea();
+                MessageBox.Show("暂无收藏的会话", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            // 隐藏聊天区返回按钮
+            BackToPreviewButton.Visibility = Visibility.Collapsed;
+        }
+        private void FavoritePreviewList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (FavoritePreviewList.SelectedItem is ChatSession selectedSession)
+            {
+                // 用Id到SessionManager里查找原始对象
+                var realSession = _sessionManager.Sessions
+                    .FirstOrDefault(s => s.Id == selectedSession.Id);
+
+                if (realSession != null)
+                {
+                    _isFromFavoritePreview = true;
+                    _sessionManager.SwitchToSession(realSession);
+                    ShowChatArea();
+                }
+                else
+                {
+                    MessageBox.Show("该会话已被删除或不存在。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+
+                FavoritePreviewList.SelectedItem = null;
+            }
+        }
+        private void ShowChatArea()
+        {
+            ChatAreaGrid.Visibility = Visibility.Visible;
+            FavoritePreviewGrid.Visibility = Visibility.Collapsed;
+
+            // 只要是从预览进来的就显示返回按钮
+            BackToPreviewButton.Visibility = _isFromFavoritePreview ? Visibility.Visible : Visibility.Collapsed;
+
+            // 正常加载聊天内容
+            if (_sessionManager.CurrentSession != null)
+            {
+                LoadSessionMessages(_sessionManager.CurrentSession);
+                UpdateCurrentSessionTitle(_sessionManager.CurrentSession.Name);
+            }
+        }
+        private void BackToPreviewButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isFromFavoritePreview = false;
+            ShowFavoritePreview();
         }
 
         #endregion

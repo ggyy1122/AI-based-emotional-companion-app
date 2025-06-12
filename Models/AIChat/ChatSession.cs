@@ -55,6 +55,13 @@ namespace GameApp.Models.AIChat
         /// Whether this session is a special elf session (1) or a regular one (0)
         /// </summary>
         public int IsSpecialElfSession { get; set; } = 0;
+
+        /// <summary>
+        /// Whether is favorite
+        /// </summary>
+        public bool IsFavorite { get; set; } = false;
+
+
         /// <summary>
         /// Collection of messages in this session
         /// </summary>

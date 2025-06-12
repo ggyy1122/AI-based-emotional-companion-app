@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Generic;
 using GameApp.Models.AIChat;
+using System.Data.Common;
 
 namespace GameApp.Services.AIChat
 {
@@ -527,6 +528,25 @@ namespace GameApp.Services.AIChat
             // Could use timer-based or immediate saving
         }
 
+        /// <summary>
+        /// 切换收藏/取消收藏状态
+        /// </summary>
+        /// <param name="session">要切换收藏状态的会话</param>
+        /// <returns>切换后的状态（true=已收藏，false=未收藏）</returns>
+        public bool ToggleFavorite(ChatSession session)
+        {
+            if (session == null) return false;
+            var newFavorite = !session.IsFavorite;
+            using (var db = new ChatDbService())
+            {
+                db.ExecuteNonQuery(
+                    "UPDATE ChatSessions SET IsFavorite = @isFavorite WHERE Id = @id",
+                    new { isFavorite = newFavorite ? 1 : 0, id = session.Id });
+            }
+            session.IsFavorite = newFavorite;
+            return newFavorite;
+        }
+
         #endregion
 
         #region Utility Methods
@@ -597,4 +617,8 @@ namespace GameApp.Services.AIChat
         public ChatSession NewestSession { get; set; }
         public ChatSession MostActiveSession { get; set; }
     }
-}
+
+
+
+
+    }

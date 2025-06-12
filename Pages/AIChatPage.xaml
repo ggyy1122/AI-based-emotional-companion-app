@@ -21,6 +21,8 @@
                     <RowDefinition Height="Auto"/>
                     <!-- Header -->
                     <RowDefinition Height="Auto"/>
+                    <!-- Favorite button -->
+                    <RowDefinition Height="Auto"/>
                     <!-- New chat button -->
                     <RowDefinition Height="*"/>
                     <!-- Sessions list -->
@@ -31,6 +33,7 @@
                         Background="#1E1E20"
                         Padding="16,12">
                     <TextBlock Text="Chat Sessions"
+                               HorizontalAlignment="Center"
                                Foreground="White"
                                FontSize="14"
                                FontWeight="SemiBold"/>
@@ -38,8 +41,66 @@
                     
                 </Border>
 
-                <!-- New Chat Button -->
+                <!-- New Favorite Button -->
                 <Button Grid.Row="1"
+           x:Name="FavoriteButton"
+           Margin="12"
+           Padding="12,8"
+           Background="#4A90E2"
+           BorderThickness="0"
+           Click=" FavoriteButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="ButtonBorder"
+                                   Background="#4A90E2"
+                                   CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver"
+                                        Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                           Property="Background"
+                                           Value="#6BB6FF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed"
+                                        Value="True">
+                                                <Setter TargetName="ButtonBorder"
+                                           Property="Background"
+                                           Value="#2970C7"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                            Value="True">
+                                    <Setter Property="Cursor"
+                               Value="Hand"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text=""
+                      Foreground="White"
+                      FontSize="20"
+                      FontWeight="Bold"
+                      Margin="0,0,10,0"
+                      VerticalAlignment="Center"/>
+                        <TextBlock Text="Favorite"
+                      Foreground="White"
+                      FontSize="16"
+                      VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <!-- New Chat Button -->
+                <Button Grid.Row="2"
                         x:Name="NewChatButton"
                         Margin="12"
                         Padding="12,8"
@@ -96,9 +157,10 @@
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
+                
 
                 <!-- Sessions List -->
-                <ScrollViewer Grid.Row="2"
+                <ScrollViewer Grid.Row="3"
                               VerticalScrollBarVisibility="Auto"
                               Margin="8,0,8,8">
                     <ListBox x:Name="SessionsList"
@@ -191,79 +253,99 @@
 
         <!-- Chat Area -->
         <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <!-- Header -->
-                <RowDefinition Height="*"/>
-                <!-- Chat content -->
-                <RowDefinition Height="Auto"/>
-                <!-- Input area -->
-            </Grid.RowDefinitions>
+            <!-- 新增外层Grid用于切换聊天区和会话预览区 -->
+            <Grid>
+                <!-- 聊天区 -->
+                <Grid x:Name="ChatAreaGrid" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- Header -->
+                        <RowDefinition Height="*"/>
+                        <!-- Chat content -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Input area -->
+                    </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Border Grid.Row="0"
+                    <!-- Header -->
+                    <Border Grid.Row="0"
                     Background="#4A90E2"
                     Padding="10,8">
-                <Grid>
-                    <Button x:Name="ToggleSidebarButton"
-                             Margin="0,0,0,0"
-                       HorizontalAlignment="Left"
-                          VerticalAlignment="Center"
-                               Width="24"
-                      Height="24"
-                         Background="Transparent"
-                        BorderThickness="0"
-                       Click="ToggleSidebarButton_Click">
-                        <TextBlock Text="≡"
-               Foreground="White"
-               FontSize="16"/>
-                    </Button>
-                    <Button Click="BackToMainPage_Click"
+                        <Grid>
+                            <Button x:Name="ToggleSidebarButton"
+                            Margin="0,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Width="24"
+                            Height="24"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="ToggleSidebarButton_Click">
+                                <TextBlock Text="≡"
+                                   Foreground="White"
+                                   FontSize="16"/>
+                            </Button>
+                            <!-- 新增：返回会话预览按钮 -->
+                            <Button x:Name="BackToPreviewButton"
+                            Visibility="Collapsed"
+                            Click="BackToPreviewButton_Click"
+                            HorizontalAlignment="Left"
+                            Margin="50,0,0,0"
+                            Width="32" Height="32"
+                            ToolTip="Back to Preview"
+                            Background="Transparent"
+                            BorderThickness="0">
+                                <TextBlock Text="←"
+                                   FontSize="18"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                            </Button>
+                            <Button Click="BackToMainPage_Click"
                             HorizontalAlignment="Left"
                             Background="Transparent"
                             BorderThickness="0"
                             Margin="20,0,0,0">
-                        <Image Source="/Resources/ChatPage/home.png"
+                                <Image Source="/Resources/ChatPage/home.png"
                                Width="20"
                                Height="20"/>
-                    </Button>
-                    <TextBlock x:Name="CurrentSessionTitle"
+                            </Button>
+                            <TextBlock x:Name="CurrentSessionTitle"
                                Text="AI Assistant"
                                Foreground="White"
                                FontSize="16"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"/>
-                </Grid>
-            </Border>
+                        </Grid>
+                    </Border>
 
-            <!-- Chat Content Area -->
-            <ScrollViewer Grid.Row="1"
+                    <!-- Chat Content Area -->
+                    <ScrollViewer Grid.Row="1"
                           x:Name="ChatScrollViewer"
                           VerticalScrollBarVisibility="Auto"
                           Padding="12"
                           Margin="0,0,0,5">
-                <StackPanel x:Name="MessagesPanel">
-                    <!-- Messages will be added here dynamically -->
-                </StackPanel>
-            </ScrollViewer>
+                        <StackPanel x:Name="MessagesPanel">
+                            <!-- Messages will be added here dynamically -->
+                        </StackPanel>
+                    </ScrollViewer>
 
-            <!-- Input Area -->
-            <Border Grid.Row="2"
+                    <!-- Input Area -->
+                    <Border Grid.Row="2"
                     Background="White"
                     Margin="0,5,0,12"
                     HorizontalAlignment="Stretch">
-                <Grid x:Name="InputGrid"
+                        <Grid x:Name="InputGrid"
                       MaxWidth="1000">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                    <!-- Attach Button -->
-                    <Button Grid.Column="0"
+                            <!-- Attach Button -->
+                            <Button Grid.Column="0"
                             x:Name="AttachButton"
                             Width="42"
                             Height="42"
@@ -272,13 +354,13 @@
                             BorderThickness="1"
                             BorderBrush="#E0E0E0"
                             ToolTip="Attach File">
-                        <Image Source="/Resources/ChatPage/attach_icon.png"
+                                <Image Source="/Resources/ChatPage/attach_icon.png"
                                Width="20"
                                Height="20"/>
-                    </Button>
+                            </Button>
 
-                    <!-- Text Input -->
-                    <TextBox Grid.Column="1"
+                            <!-- Text Input -->
+                            <TextBox Grid.Column="1"
                              x:Name="MessageInput"
                              Height="42"
                              Margin="0,0,8,0"
@@ -288,8 +370,8 @@
                              BorderBrush="#E0E0E0"
                              Text="Type your message here..."/>
 
-                    <!-- Voice Button -->
-                    <Button Grid.Column="2"
+                            <!-- Voice Button -->
+                            <Button Grid.Column="2"
                             x:Name="VoiceInputButton"
                             Width="42"
                             Height="42"
@@ -298,13 +380,13 @@
                             BorderThickness="1"
                             BorderBrush="#E0E0E0"
                             ToolTip="Voice Input">
-                        <Image Source="/Resources/ChatPage/microphone_icon.png"
+                                <Image Source="/Resources/ChatPage/microphone_icon.png"
                                Width="20"
                                Height="20"/>
-                    </Button>
+                            </Button>
 
-                    <!-- Stop Button -->
-                    <Button Grid.Column="3"
+                            <!-- Stop Button -->
+                            <Button Grid.Column="3"
                             x:Name="StopButton"
                             Width="42"
                             Height="42"
@@ -313,13 +395,13 @@
                             BorderThickness="1"
                             BorderBrush="#E0E0E0"
                             ToolTip="Stop">
-                        <Image Source="/Resources/ChatPage/stop_icon.png"
+                                <Image Source="/Resources/ChatPage/stop_icon.png"
                                Width="20"
                                Height="20"/>
-                    </Button>
+                            </Button>
 
-                    <!-- Send Button -->
-                    <Button Grid.Column="4"
+                            <!-- Send Button -->
+                            <Button Grid.Column="4"
                             x:Name="SendButton"
                             Width="42"
                             Height="42"
@@ -328,12 +410,62 @@
                             BorderThickness="1"
                             BorderBrush="#3A80D2"
                             ToolTip="Send Message">
-                        <Image Source="/Resources/ChatPage/send_icon.png"
+                                <Image Source="/Resources/ChatPage/send_icon.png"
                                Width="20"
                                Height="20"/>
-                    </Button>
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
-            </Border>
+                <Grid x:Name="FavoritePreviewGrid" Visibility="Collapsed" Background="White">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0"
+        Background="#4A90E2"
+        Padding="10,8">
+                        <TextBlock Text="Favorite Session Preview"
+               Foreground="White"
+               FontSize="16"
+               FontWeight="Bold"
+               HorizontalAlignment="Center"/>
+                    </Border>
+                    <ListBox Grid.Row="1"
+             x:Name="FavoritePreviewList"
+             Margin="20,0,20,0"
+             Background="White"
+             BorderThickness="0"
+             SelectionChanged="FavoritePreviewList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#F0F2F5"
+                        Padding="16"
+                        Margin="0,8"
+                        CornerRadius="10"
+                        Cursor="Hand">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{Binding Name}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="Black"/>
+                                        <TextBlock Text="{Binding PreviewText}"
+                                   FontSize="12"
+                                   Foreground="#888"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="250"
+                                   Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding LastUpdated, StringFormat='{}{0:MMM dd, HH:mm}'}"
+                                   FontSize="10"
+                                   Foreground="#AAA"
+                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

@@ -28,11 +28,12 @@ namespace GameApp.Services.AIChat
                 cmd.CommandText = @"
                    CREATE TABLE IF NOT EXISTS ChatSessions (
                    Id TEXT PRIMARY KEY,
-                    Name TEXT NOT NULL,
-                CreatedAt TEXT NOT NULL,
-                LastUpdated TEXT NOT NULL,
-             IsSpecialElfSession INTEGER NOT NULL DEFAULT 0
-             );
+                   Name TEXT NOT NULL,
+                   CreatedAt TEXT NOT NULL,
+                   LastUpdated TEXT NOT NULL,
+                   IsSpecialElfSession INTEGER NOT NULL DEFAULT 0,
+                   IsFavorite INTEGER NOT NULL DEFAULT 0
+                   );
 
                     CREATE TABLE IF NOT EXISTS ChatMessages (
                         Id TEXT PRIMARY KEY,
@@ -58,14 +59,15 @@ namespace GameApp.Services.AIChat
                     {
                         cmd.CommandText = @"
                             INSERT OR REPLACE INTO ChatSessions 
-                            (Id, Name, CreatedAt, LastUpdated, IsSpecialElfSession) 
-                            VALUES (@id, @name, @createdAt, @lastUpdated, @isSpecialElfSession)";
+                            (Id, Name, CreatedAt, LastUpdated, IsSpecialElfSession, IsFavorite) 
+                            VALUES (@id, @name, @createdAt, @lastUpdated, @isSpecialElfSession, @isFavorite)";
 
                         cmd.Parameters.AddWithValue("@id", session.Id);
                         cmd.Parameters.AddWithValue("@name", session.Name);
                         cmd.Parameters.AddWithValue("@createdAt", session.CreatedAt.ToString("o"));
                         cmd.Parameters.AddWithValue("@lastUpdated", session.LastUpdated.ToString("o"));
                         cmd.Parameters.AddWithValue("@isSpecialElfSession", session.IsSpecialElfSession);
+                        cmd.Parameters.AddWithValue("@isFavorite", session.IsFavorite ? 1 : 0);
                         cmd.ExecuteNonQuery();
                     }
 
@@ -124,7 +126,8 @@ namespace GameApp.Services.AIChat
                             CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
                             LastUpdated = DateTime.Parse(reader["LastUpdated"].ToString()),
                             Messages = new ObservableCollection<ChatMessage>(),
-                            IsSpecialElfSession = Convert.ToInt32(reader["IsSpecialElfSession"])
+                            IsSpecialElfSession = Convert.ToInt32(reader["IsSpecialElfSession"]),
+                            IsFavorite = reader["IsFavorite"] != DBNull.Value && Convert.ToInt32(reader["IsFavorite"]) == 1
                         });
                     }
                 }
@@ -190,6 +193,37 @@ namespace GameApp.Services.AIChat
 
                 cmd.ExecuteNonQuery();
             }
+        }
+
+        //返回被收藏的
+        public List<ChatSession> LoadFavoriteSessions()
+        {
+            var sessions = new List<ChatSession>();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT * FROM ChatSessions WHERE IsFavorite = 1 ORDER BY LastUpdated DESC";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        sessions.Add(new ChatSession
+                        {
+                            Id = reader["Id"].ToString(),
+                            Name = reader["Name"].ToString(),
+                            CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString()),
+                            LastUpdated = DateTime.Parse(reader["LastUpdated"].ToString()),
+                            Messages = new ObservableCollection<ChatMessage>(),
+                            IsSpecialElfSession = Convert.ToInt32(reader["IsSpecialElfSession"]),
+                            IsFavorite = reader["IsFavorite"] != DBNull.Value && Convert.ToInt32(reader["IsFavorite"]) == 1
+                        });
+                    }
+                }
+            }
+            foreach (var session in sessions)
+            {
+                session.Messages = new ObservableCollection<ChatMessage>(LoadMessages(session.Id));
+            }
+            return sessions;
         }
 
         // 释放资源
