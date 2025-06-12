@@ -821,6 +821,16 @@ namespace GameApp.Pages
                 SendButton_Click(sender, e);
             }
         }
+        private bool _isSidebarCollapsed = false;
+        // 新增的侧栏切换按钮事件
+        private void ToggleSidebarButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 修正：通过x:Name访问主Grid（需在XAML中为Grid添加Name）
+            MainGrid.ColumnDefinitions[0].Width = _isSidebarCollapsed
+                ? new GridLength(280)  // 展开
+                : new GridLength(0);   // 收起
+            _isSidebarCollapsed = !_isSidebarCollapsed;
+        }
 
         #endregion
 

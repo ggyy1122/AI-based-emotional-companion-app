@@ -293,23 +293,41 @@ namespace GameApp.Services.AIChat
                             new { id = session.Id });
 
                         // 2. 更新会话信息
-                        db.ExecuteNonQuery(
-                            @"UPDATE ChatSessions 
-                      SET Name = @name, 
-                          LastUpdated = @lastUpdated 
-                      WHERE Id = @id",
-                            new
-                            {
-                                name = "New Chat",
-                                lastUpdated = DateTime.Now.ToString("o"),
-                                id = session.Id
-                            });
+                        if (session.IsSpecialElfSession != 1)
+                        {
+                            db.ExecuteNonQuery(
+                                @"UPDATE ChatSessions 
+                  SET Name = @name, 
+                      LastUpdated = @lastUpdated 
+                  WHERE Id = @id",
+                                new
+                                {
+                                    name = "New Chat",
+                                    lastUpdated = DateTime.Now.ToString("o"),
+                                    id = session.Id
+                                });
+                        }
+                        else
+                        {
+                            db.ExecuteNonQuery(
+                                @"UPDATE ChatSessions 
+                  SET LastUpdated = @lastUpdated 
+                  WHERE Id = @id",
+                                new
+                                {
+                                    lastUpdated = DateTime.Now.ToString("o"),
+                                    id = session.Id
+                                });
+                        }
 
                         transaction.Commit();
 
                         // 3. 更新内存状态
                         session.Messages.Clear();
-                        session.Name = "New Chat";
+                        if (session.IsSpecialElfSession != 1)
+                        {
+                            session.Name = "New Chat";
+                        }
                         session.LastUpdated = DateTime.Now;
                     }
                     catch

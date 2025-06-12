@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       Title="AI Voice Interaction">
 
-    <Grid Background="#F8F9FA">
+    <Grid x:Name="MainGrid" Background="#F8F9FA">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280"/>
             <!-- Session sidebar -->
@@ -34,6 +34,8 @@
                                Foreground="White"
                                FontSize="14"
                                FontWeight="SemiBold"/>
+                 
+                    
                 </Border>
 
                 <!-- New Chat Button -->
@@ -203,11 +205,24 @@
                     Background="#4A90E2"
                     Padding="10,8">
                 <Grid>
+                    <Button x:Name="ToggleSidebarButton"
+                             Margin="0,0,0,0"
+                       HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
+                               Width="24"
+                      Height="24"
+                         Background="Transparent"
+                        BorderThickness="0"
+                       Click="ToggleSidebarButton_Click">
+                        <TextBlock Text="≡"
+               Foreground="White"
+               FontSize="16"/>
+                    </Button>
                     <Button Click="BackToMainPage_Click"
                             HorizontalAlignment="Left"
                             Background="Transparent"
                             BorderThickness="0"
-                            Margin="8,0,0,0">
+                            Margin="20,0,0,0">
                         <Image Source="/Resources/ChatPage/home.png"
                                Width="20"
                                Height="20"/>

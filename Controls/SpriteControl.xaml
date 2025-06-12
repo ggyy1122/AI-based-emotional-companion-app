@@ -7,8 +7,8 @@
         <Image x:Name="SpriteImage"
                Stretch="Fill"
                MouseLeftButtonDown="SpriteImage_MouseLeftButtonDown"
-               MouseMove="SpriteImage_MouseMove"
-               MouseLeftButtonUp="SpriteImage_MouseLeftButtonUp"/>
+        MouseMove="SpriteImage_MouseMove"
+       MouseLeftButtonUp="SpriteImage_MouseLeftButtonUp"/>
         <Canvas x:Name="BubbleCanvas" IsHitTestVisible="False"/>
     </Grid>
 </UserControl>
