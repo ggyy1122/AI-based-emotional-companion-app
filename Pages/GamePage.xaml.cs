@@ -12,11 +12,13 @@ using System.Diagnostics;
 using System.Windows.Media.Imaging;
 using System.Data.SQLite;
 using GameApp;
+using HandAngleDemo;
+using System.ComponentModel;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace TowerDefenseGame
 {
-    public partial class GamePage : Page
+    public partial class GamePage : Page, INotifyPropertyChanged
     {
         private readonly DispatcherTimer _gameTimer;//定时器
         private readonly Random _random = new Random();//随机数生成器
@@ -35,7 +37,13 @@ namespace TowerDefenseGame
         private const double ShotInterval = 1.5; // 射击间隔(秒)
         private const double BulletSpeed = 300; // 子弹速度(像素/秒)
         private const double EnemySpeed = 100; // 敌人速度(像素/秒)
-        private const double EnemySpawnInterval = 1.0; // 敌人生成间隔(秒)
+        private  double EnemySpawnInterval = 0.0; // 敌人生成间隔(秒)
+        private static readonly double[] EnemyIntervals = new double[]
+        {
+            0.5,
+            1.0,
+            2.0
+        };
 
         private DateTime _lastShotTime = DateTime.MinValue;//上次射击时间
         private DateTime _lastEnemySpawnTime = DateTime.MinValue;//上次敌人生成时间
@@ -54,6 +62,11 @@ namespace TowerDefenseGame
 
         private const string RESOURCES_PATH = "pack://application:,,,/Resources/";
 
+        private HandGesture handges=new HandGesture();
+
+        private double __angle;
+
+        private bool isMouse = true;
 
         public GamePage()
         {
@@ -77,6 +90,9 @@ namespace TowerDefenseGame
             {
                 AllEnemy.Add(new BitmapImage(new Uri($"pack://application:,,,/Resources/monster{i}.png")));
             }
+            EnemySpawnInterval = EnemyIntervals[2];
+            DataContext = this;
+            handges.StartCamera();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)//窗口载入后，开启游戏主循环
@@ -93,6 +109,7 @@ namespace TowerDefenseGame
 
         private void Page_MouseMove(object sender, MouseEventArgs e)
         {
+            if (!isMouse) return;
             if ((DateTime.Now - _lastRotationTime).TotalSeconds < MinRotationInterval)
                 return;
             //_lastRotationTime = DateTime.Now;
@@ -133,6 +150,14 @@ namespace TowerDefenseGame
             MoveEnemies();
             CheckCollisions();
             RemoveOffscreenObjects();
+            if (!isMouse)
+            {
+                handges.OnFrame(CameraImage, ref __angle, sender, e);
+                Rotate.CenterX = TowerGun.Width / 2;
+                Rotate.CenterY = TowerGun.Height / 2;
+                Rotate.Angle=-__angle;
+            }
+           
         }
 
         private void UpdateCenteredPosition()
@@ -523,5 +548,126 @@ namespace TowerDefenseGame
             star.RenderTransform.BeginAnimation(
                 ScaleTransform.ScaleYProperty, scaleAnim);
         }
+
+
+
+        private bool _isSettingsOpen;
+        public bool IsSettingsOpen
+        {
+            get => _isSettingsOpen;
+            set { _isSettingsOpen = value; OnPropertyChanged(nameof(IsSettingsOpen)); }
+        }
+
+        // 游戏模式
+        private bool _isMouseMode = true;
+        public bool IsMouseMode
+        {
+            get => _isMouseMode;
+            set
+            {
+                if (_isMouseMode != value)
+                {
+                    _isMouseMode = value;
+                    if (value) IsGestureMode = false;
+                    OnPropertyChanged(nameof(IsMouseMode));
+                    isMouse = true;
+                    CameraImage.Source = null;
+                }
+
+            }
+        }
+
+        private bool _isGestureMode;
+        public bool IsGestureMode
+        {
+            get => _isGestureMode;
+            set
+            {
+                if (_isGestureMode != value)
+                {
+                    _isGestureMode = value;
+                    if (value) IsMouseMode = false;
+                    OnPropertyChanged(nameof(IsGestureMode));
+                    isMouse=false;
+                }
+            }
+        }
+
+        // 出怪速度
+        private bool _isFast;
+        public bool IsFast
+        {
+            get => _isFast;
+            set
+            {
+                if (_isFast != value)
+                {
+                    _isFast = value;
+                    if (value)
+                    {
+                        IsMedium = false;
+                        IsSlow = false;
+                    }
+                    OnPropertyChanged(nameof(IsFast));
+                    EnemySpawnInterval = EnemyIntervals[0];
+                }
+            }
+        }
+
+        private bool _isMedium;
+        public bool IsMedium
+        {
+            get => _isMedium;
+            set
+            {
+                if (_isMedium != value)
+                {
+                    _isMedium = value;
+                    if (value)
+                    {
+                        IsFast = false;
+                        IsSlow = false;
+                    }
+                    OnPropertyChanged(nameof(IsMedium));
+                    EnemySpawnInterval = EnemyIntervals[1];
+                }
+            }
+        }
+
+        private bool _isSlow=true;
+        public bool IsSlow
+        {
+            get => _isSlow;
+            set
+            {
+                if (_isSlow != value)
+                {
+                    _isSlow = value;
+                    if (value)
+                    {
+                        IsFast = false;
+                        IsMedium = false;
+                    }
+                    OnPropertyChanged(nameof(IsSlow));
+                    EnemySpawnInterval = EnemyIntervals[2];
+                }
+            }
+        }
+
+       
+
+        private void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            IsSettingsOpen = true;
+        }
+
+        private void BtnCloseSettings_Click(object sender, RoutedEventArgs e)
+        {
+            IsSettingsOpen = false;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
