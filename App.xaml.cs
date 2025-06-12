@@ -19,6 +19,11 @@ namespace GameApp
 
         public static readonly string VoiceDirectoryName = "Voices";
         public static readonly string VoiceStoragePath = Path.Combine(ProjectRoot, VoiceDirectoryName);
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            HandGestureManager.Instance.Preload(); // 应用一启动就后台加载
+        }
 
         // 添加应用程序数据目录属性
         public static string DataDirectory

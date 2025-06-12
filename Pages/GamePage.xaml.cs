@@ -14,7 +14,6 @@ using System.Data.SQLite;
 using GameApp;
 using HandAngleDemo;
 using System.ComponentModel;
-//using static System.Net.Mime.MediaTypeNames;
 
 namespace TowerDefenseGame
 {
@@ -37,7 +36,7 @@ namespace TowerDefenseGame
         private const double ShotInterval = 1.5; // 射击间隔(秒)
         private const double BulletSpeed = 300; // 子弹速度(像素/秒)
         private const double EnemySpeed = 100; // 敌人速度(像素/秒)
-        private  double EnemySpawnInterval = 0.0; // 敌人生成间隔(秒)
+        private double EnemySpawnInterval = 0.0; // 敌人生成间隔(秒)
         private static readonly double[] EnemyIntervals = new double[]
         {
             0.5,
@@ -62,7 +61,9 @@ namespace TowerDefenseGame
 
         private const string RESOURCES_PATH = "pack://application:,,,/Resources/";
 
-        private HandGesture handges=new HandGesture();
+        // 手势识别相关字段
+        private HandGesture? handges = null;
+        private bool _isHandGestureReady = false;
 
         private double __angle;
 
@@ -92,7 +93,22 @@ namespace TowerDefenseGame
             }
             EnemySpawnInterval = EnemyIntervals[2];
             DataContext = this;
-            handges.StartCamera();
+            // 手势模型不在这里加载，延迟异步加载
+        }
+
+        private async void InitHandGestureAsync()
+        {
+            // 显示加载中提示，假定有LoadingText控件
+           // if (LoadingText != null)
+              //  LoadingText.Visibility = Visibility.Visible;
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                handges = new HandGesture();
+                handges.StartCamera();
+            });
+            _isHandGestureReady = true;
+          //  if (LoadingText != null)
+              //  LoadingText.Visibility = Visibility.Collapsed;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)//窗口载入后，开启游戏主循环
@@ -125,10 +141,6 @@ namespace TowerDefenseGame
             Rotate.CenterX = TowerGun.Width / 2;
             Rotate.CenterY = TowerGun.Height / 2;
             Rotate.Angle = angle;
-
-
-            //TowerGun.RenderTransform = new RotateTransform(angle * 180 / Math.PI);
-
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -150,14 +162,19 @@ namespace TowerDefenseGame
             MoveEnemies();
             CheckCollisions();
             RemoveOffscreenObjects();
-            if (!isMouse)
+
+            if (!isMouse && HandGestureManager.Instance.IsReady)
             {
-                handges.OnFrame(CameraImage, ref __angle, sender, e);
-                Rotate.CenterX = TowerGun.Width / 2;
-                Rotate.CenterY = TowerGun.Height / 2;
-                Rotate.Angle=-__angle;
+                if (handges == null)
+                    handges = HandGestureManager.Instance.HandGestureInstance;
+                if (handges != null)
+                {
+                    handges.OnFrame(CameraImage, ref __angle, sender, e);
+                    Rotate.CenterX = TowerGun.Width / 2;
+                    Rotate.CenterY = TowerGun.Height / 2;
+                    Rotate.Angle = -__angle;
+                }
             }
-           
         }
 
         private void UpdateCenteredPosition()
@@ -428,7 +445,6 @@ namespace TowerDefenseGame
             }
         }
 
-
         public void SaveScore() // 保存当前分数
         {
             using (var connection = new SQLiteConnection(App.ConnectionString))
@@ -549,8 +565,6 @@ namespace TowerDefenseGame
                 ScaleTransform.ScaleYProperty, scaleAnim);
         }
 
-
-
         private bool _isSettingsOpen;
         public bool IsSettingsOpen
         {
@@ -573,7 +587,6 @@ namespace TowerDefenseGame
                     isMouse = true;
                     CameraImage.Source = null;
                 }
-
             }
         }
 
@@ -586,9 +599,14 @@ namespace TowerDefenseGame
                 if (_isGestureMode != value)
                 {
                     _isGestureMode = value;
-                    if (value) IsMouseMode = false;
+                    if (value)
+                    {
+                        IsMouseMode = false;
+                        if (!_isHandGestureReady)
+                            InitHandGestureAsync();
+                    }
                     OnPropertyChanged(nameof(IsGestureMode));
-                    isMouse=false;
+                    isMouse = false;
                 }
             }
         }
@@ -634,7 +652,7 @@ namespace TowerDefenseGame
             }
         }
 
-        private bool _isSlow=true;
+        private bool _isSlow = true;
         public bool IsSlow
         {
             get => _isSlow;
@@ -653,8 +671,6 @@ namespace TowerDefenseGame
                 }
             }
         }
-
-       
 
         private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
