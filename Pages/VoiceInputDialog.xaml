@@ -3,123 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Voice Input"
         Width="650"
-        Height="450"
+        Height="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         MinWidth="550"
-        MinHeight="400"
+        MinHeight="450"
         Background="#F8F9FA"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
 
-    <!-- Rest of your existing XAML content remains the same -->
-    <Grid Margin="25">
-        <!-- All your existing Grid content remains unchanged -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Title -->
-        <TextBlock Grid.Row="0"
-                   Text="🎤 Voice Input"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Foreground="#333"
-                   Margin="0,0,0,15"
-                   HorizontalAlignment="Center"/>
-
-        <!-- Instructions -->
-        <TextBlock Grid.Row="1"
-                   Text="Type your message below or use voice recognition to dictate your text:"
-                   FontSize="15"
-                   Foreground="#666"
-                   Margin="0,0,0,20"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap"/>
-
-        <TextBlock x:Name="StatusTextBlock"
-                   Grid.Row="1"
-                   Text=""
-                   FontSize="13"
-                   Foreground="Gray"
-                   Margin="0,5,0,15"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Visibility="Collapsed"/>
-
-        <!-- Message Input Area -->
-        <Border Grid.Row="2"
-                BorderBrush="#E0E0E0"
-                BorderThickness="2"
-                CornerRadius="10"
-                Margin="0,0,0,20">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Auto">
-                <TextBox x:Name="RecognizedTextBox"
-                         BorderThickness="0"
-                         Background="White"
-                         Padding="20"
-                         FontSize="15"
-                         TextWrapping="Wrap"
-                         AcceptsReturn="True"
-                         MinHeight="200"
-                         MaxHeight="300"
-                         Text="Type your message here..."
-                         GotFocus="RecognizedTextBox_GotFocus"
-                         LostFocus="RecognizedTextBox_LostFocus"
-                         VerticalScrollBarVisibility="Auto"/>
-            </ScrollViewer>
-        </Border>
-
-        <!-- Voice Recognition Button -->
-        <Button Grid.Row="3"
-                x:Name="VoiceRecognitionButton"
-                Content="🎤 Start Voice Recognition"
-                Background="#28A745"
-                Foreground="White"
-                BorderThickness="0"
-                Padding="20,12"
-                Margin="0,0,0,20"
-                FontSize="15"
-                FontWeight="Bold"
-                Click="StartVoiceRecognition_Click"
-                Style="{DynamicResource RoundedButtonStyle}"/>
-
-        <!-- Action Buttons -->
-        <StackPanel Grid.Row="4"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button x:Name="CancelButton"
-                    Content="Cancel"
-                    Background="#6C757D"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Padding="30,12"
-                    Margin="0,0,20,0"
-                    FontSize="15"
-                    Click="CancelButton_Click"
-                    Style="{DynamicResource RoundedButtonStyle}"/>
-            <Button x:Name="SendButton"
-                    Content="Send Message"
-                    Background="#4A90E2"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Padding="30,12"
-                    FontSize="15"
-                    FontWeight="Bold"
-                    Click="SendButton_Click"
-                    Style="{DynamicResource RoundedButtonStyle}"/>
-        </StackPanel>
-    </Grid>
-
-    <!-- Your existing Window.Resources remain the same -->
     <Window.Resources>
-        <Style x:Key="RoundedButtonStyle"
+        <Style x:Key="UniformButtonStyle"
                TargetType="Button">
+            <Setter Property="Height"
+                    Value="45"/>
+            <Setter Property="FontSize"
+                    Value="14"/>
+            <Setter Property="FontWeight"
+                    Value="Medium"/>
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+            <Setter Property="Margin"
+                    Value="5"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -142,10 +49,157 @@
                                 <Setter Property="Opacity"
                                         Value="0.7"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter Property="Opacity"
+                                        Value="0.5"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
     </Window.Resources>
+
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Title -->
+            <RowDefinition Height="Auto"/>
+            <!-- Instructions -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status -->
+            <RowDefinition Height="*"/>
+            <!-- Text Input Area -->
+            <RowDefinition Height="Auto"/>
+            <!-- Voice Recognition Button -->
+            <RowDefinition Height="Auto"/>
+            <!-- All Other Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="🎤 Voice Input"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Foreground="#333"
+                   Margin="0,0,0,15"
+                   HorizontalAlignment="Center"/>
+
+        <!-- Instructions -->
+        <TextBlock Grid.Row="1"
+                   Text="Type your message below or use voice recognition to dictate your text:"
+                   FontSize="15"
+                   Foreground="#666"
+                   Margin="0,0,0,15"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"/>
+
+        <!-- Status Display -->
+        <Border Grid.Row="2"
+                Background="#E8F4FD"
+                BorderBrush="#4A90E2"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,15"
+                Visibility="Visible">
+            <StackPanel>
+                <TextBlock x:Name="StatusTextBlock"
+                           Text="Preparing voice recognition..."
+                           FontSize="13"
+                           Foreground="#4A90E2"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"/>
+
+                <TextBlock x:Name="RecordingTimeTextBlock"
+                           Text=""
+                           FontSize="12"
+                           Foreground="OrangeRed"
+                           HorizontalAlignment="Center"
+                           Margin="0,3,0,0"
+                           Visibility="Collapsed"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Message Input Area -->
+        <Border Grid.Row="3"
+                BorderBrush="#E0E0E0"
+                BorderThickness="2"
+                CornerRadius="10"
+                Margin="0,0,0,15">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <TextBox x:Name="RecognizedTextBox"
+                         BorderThickness="0"
+                         Background="White"
+                         Padding="20"
+                         FontSize="15"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         MinHeight="150"
+                         MaxHeight="250"
+                         Text="Type your message here..."
+                         GotFocus="RecognizedTextBox_GotFocus"
+                         LostFocus="RecognizedTextBox_LostFocus"
+                         VerticalScrollBarVisibility="Auto"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Voice Recognition Button -->
+        <Button Grid.Row="4"
+                x:Name="VoiceRecognitionButton"
+                Content="🎤 Start Voice Recognition"
+                Background="#28A745"
+                Foreground="White"
+                Padding="20,12"
+                Margin="0,0,0,15"
+                FontSize="16"
+                FontWeight="Bold"
+                Click="StartVoiceRecognition_Click"
+                Style="{StaticResource UniformButtonStyle}"/>
+
+        <!-- All Other Buttons in Uniform Grid -->
+        <UniformGrid Grid.Row="5"
+                     Columns="4"
+                     Margin="0,0,0,10">
+
+            <!-- Cancel Button -->
+            <Button x:Name="CancelButton"
+                    Content="❌ Cancel"
+                    Background="#6C757D"
+                    Foreground="White"
+                    Click="CancelButton_Click"
+                    Style="{StaticResource UniformButtonStyle}"
+                    ToolTip="Cancel and close dialog"/>
+
+            <!-- Mode Toggle Button -->
+            <Button x:Name="ModeToggleButton"
+                    Content="Mode: Replace"
+                    Background="#6C757D"
+                    Foreground="White"
+                    Click="ModeToggleButton_Click"
+                    Style="{StaticResource UniformButtonStyle}"
+                    ToolTip="Click to switch between Replace and Append modes"/>
+
+            <!-- Clear Button -->
+            <Button x:Name="ClearButton"
+                    Content="🗑️ Clear Text"
+                    Background="#E98C97"
+                    Foreground="White"
+                    Click="ClearButton_Click"
+                    Style="{StaticResource UniformButtonStyle}"
+                    ToolTip="Clear all text"/>
+
+
+            <!-- Send Button -->
+            <Button x:Name="SendButton"
+                    Content="📤 Send"
+                    Background="#4A90E2"
+                    Foreground="White"
+                    Click="SendButton_Click"
+                    Style="{StaticResource UniformButtonStyle}"
+                    ToolTip="Send the message"/>
+        </UniformGrid>
+    </Grid>
 </Window>

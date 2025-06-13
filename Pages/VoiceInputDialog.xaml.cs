@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using GameApp.Services.Voice;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace GameApp.Pages
 {
@@ -15,6 +16,9 @@ namespace GameApp.Pages
         private int _recordingSeconds;
         private bool _isListening;
         private string _placeholderText = "Type your message here...";
+
+        // Mode management
+        private bool _isAppendMode = false; // false = Replace, true = Append
 
         public string MessageText { get; private set; } = "";
         public bool SendMessage { get; private set; } = false;
@@ -61,6 +65,25 @@ namespace GameApp.Pages
             // Set placeholder text appearance
             RecognizedTextBox.Foreground = Brushes.Gray;
             RecognizedTextBox.Text = _placeholderText;
+
+            // Initialize mode button
+            UpdateModeButton();
+        }
+
+        private void UpdateModeButton()
+        {
+            if (_isAppendMode)
+            {
+                ModeToggleButton.Content = "Mode: Append";
+                ModeToggleButton.Background = new SolidColorBrush(Color.FromRgb(255, 165, 0)); // Orange
+                ModeToggleButton.ToolTip = "Voice input will be added to existing text. Click to switch to Replace mode.";
+            }
+            else
+            {
+                ModeToggleButton.Content = "Mode: Replace";
+                ModeToggleButton.Background = new SolidColorBrush(Color.FromRgb(138, 43, 226)); // Purple
+                ModeToggleButton.ToolTip = "Voice input will replace all text. Click to switch to Append mode.";
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -68,12 +91,45 @@ namespace GameApp.Pages
             try
             {
                 RecognizedTextBox.Focus();
+
+                // Auto-start voice recognition when dialog opens
+                AutoStartVoiceRecognition();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Window_Loaded error: {ex.Message}");
             }
         }
+
+        private async void AutoStartVoiceRecognition()
+        {
+            try
+            {
+                // Wait a brief moment to ensure the UI is fully loaded
+                await Task.Delay(500);
+
+                if (_voiceService != null && _voiceService.IsInitialized && !_isListening)
+                {
+                    string modeText = _isAppendMode ? "append" : "replace";
+                    ShowStatusMessage($"Auto-starting voice recognition in {modeText} mode...",
+                                    new SolidColorBrush(Color.FromRgb(23, 162, 184)));
+
+                    await _voiceService.StartRecordingAsync();
+                }
+                else
+                {
+                    ShowStatusMessage("Voice service not available for auto-start",
+                                    new SolidColorBrush(Color.FromRgb(255, 193, 7)));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AutoStartVoiceRecognition error: {ex.Message}");
+                ShowStatusMessage($"Auto-start failed: {ex.Message}",
+                                new SolidColorBrush(Color.FromRgb(220, 53, 69)));
+            }
+        }
+
 
         #region Voice Recognition Event Handlers
 
@@ -85,11 +141,7 @@ namespace GameApp.Pages
                 {
                     if (!string.IsNullOrWhiteSpace(recognizedText))
                     {
-                        // Clear placeholder text and set recognized text
-                        RecognizedTextBox.Foreground = Brushes.Black;
-                        RecognizedTextBox.Text = recognizedText;
-                        MessageText = recognizedText;
-
+                        HandleRecognizedText(recognizedText);
                         Debug.WriteLine($"Speech recognized: {recognizedText}");
                     }
 
@@ -102,6 +154,82 @@ namespace GameApp.Pages
             });
         }
 
+        private void HandleRecognizedText(string recognizedText)
+        {
+            try
+            {
+                // Check if current text is placeholder
+                bool hasPlaceholder = RecognizedTextBox.Text == _placeholderText;
+
+                if (hasPlaceholder || !_isAppendMode)
+                {
+                    // Replace mode or placeholder text present
+                    RecognizedTextBox.Foreground = Brushes.Black;
+                    RecognizedTextBox.Text = recognizedText;
+                    ShowStatusMessage($"Text replaced: \"{GetPreviewText(recognizedText)}\"",
+                                    new SolidColorBrush(Color.FromRgb(40, 167, 69)));
+                }
+                else
+                {
+                    // Append mode and there's existing content
+                    string currentText = RecognizedTextBox.Text.Trim();
+
+                    if (string.IsNullOrEmpty(currentText))
+                    {
+                        // No existing content, just set the recognized text
+                        RecognizedTextBox.Text = recognizedText;
+                    }
+                    else
+                    {
+                        // Add recognized text with appropriate spacing
+                        string separator = DetermineTextSeparator(currentText, recognizedText);
+                        RecognizedTextBox.Text = currentText + separator + recognizedText;
+                    }
+
+                    RecognizedTextBox.Foreground = Brushes.Black;
+                    ShowStatusMessage($"Text appended: \"{GetPreviewText(recognizedText)}\"",
+                                    new SolidColorBrush(Color.FromRgb(40, 167, 69)));
+                }
+
+                // Move cursor to end and update message text
+                RecognizedTextBox.CaretIndex = RecognizedTextBox.Text.Length;
+                MessageText = RecognizedTextBox.Text;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"HandleRecognizedText error: {ex.Message}");
+            }
+        }
+
+        private string DetermineTextSeparator(string existingText, string newText)
+        {
+            if (string.IsNullOrEmpty(existingText)) return "";
+
+            char lastChar = existingText[existingText.Length - 1];
+            char firstChar = char.ToLower(newText[0]);
+
+            // If existing text ends with punctuation or whitespace, add space
+            if (char.IsPunctuation(lastChar) || char.IsWhiteSpace(lastChar))
+            {
+                return " ";
+            }
+
+            // If new text starts with punctuation, no separator needed
+            if (char.IsPunctuation(firstChar))
+            {
+                return "";
+            }
+
+            // Default: add space
+            return " ";
+        }
+
+        private string GetPreviewText(string text, int maxLength = 30)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            return text.Length > maxLength ? text.Substring(0, maxLength) + "..." : text;
+        }
+
         private void OnRecognitionError(object sender, string error)
         {
             Dispatcher.Invoke(() =>
@@ -110,9 +238,8 @@ namespace GameApp.Pages
                 {
                     Debug.WriteLine($"Recognition error: {error}");
                     StopListening();
-
-                    // Show error message briefly
-                    ShowStatusMessage($"Voice recognition failed: {error}", Brushes.Red);
+                    ShowStatusMessage($"Recognition failed: {error}",
+                                    new SolidColorBrush(Color.FromRgb(220, 53, 69)));
                 }
                 catch (Exception ex)
                 {
@@ -131,10 +258,21 @@ namespace GameApp.Pages
                     _recordingSeconds = 0;
                     _recordingTimer.Start();
 
+                    // Update voice button to show stop
                     VoiceRecognitionButton.Content = "🛑 Stop Recording";
-                    VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red color
+                    VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red
 
-                    ShowStatusMessage("🎤 Listening... Speak now", Brushes.Green);
+                    // Show recording status
+                    string modeText = _isAppendMode ? "append to" : "replace";
+                    ShowStatusMessage($"🎤 Listening... Will {modeText} text",
+                                    new SolidColorBrush(Color.FromRgb(40, 167, 69)));
+
+                    // Show recording time
+                    if (RecordingTimeTextBlock != null)
+                    {
+                        RecordingTimeTextBlock.Visibility = Visibility.Visible;
+                        RecordingTimeTextBlock.Text = "Recording: 0s";
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -150,7 +288,8 @@ namespace GameApp.Pages
                 try
                 {
                     StopListening();
-                    ShowStatusMessage("Processing speech...", Brushes.Blue);
+                    ShowStatusMessage("Processing speech...",
+                                    new SolidColorBrush(Color.FromRgb(23, 162, 184)));
                 }
                 catch (Exception ex)
                 {
@@ -184,19 +323,60 @@ namespace GameApp.Pages
             {
                 if (!_isListening)
                 {
-                    ShowStatusMessage("Starting voice recognition...", Brushes.Blue);
+                    // Start recording immediately
+                    string modeText = _isAppendMode ? "append" : "replace";
+                    ShowStatusMessage($"Starting voice recognition in {modeText} mode...",
+                                    new SolidColorBrush(Color.FromRgb(23, 162, 184)));
                     await _voiceService.StartRecordingAsync();
                 }
                 else
                 {
+                    // Stop recording
                     await _voiceService.StopRecordingAsync();
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Voice recognition button error: {ex.Message}");
-                ShowStatusMessage($"Voice recognition failed: {ex.Message}", Brushes.Red);
+                ShowStatusMessage($"Voice recognition failed: {ex.Message}",
+                                new SolidColorBrush(Color.FromRgb(220, 53, 69)));
                 StopListening();
+            }
+        }
+
+        private void ModeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _isAppendMode = !_isAppendMode;
+                UpdateModeButton();
+
+                string newMode = _isAppendMode ? "Append" : "Replace";
+                ShowStatusMessage($"Mode changed to: {newMode}",
+                                new SolidColorBrush(Color.FromRgb(23, 162, 184)));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Mode toggle error: {ex.Message}");
+            }
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Clear text and reset to placeholder
+                RecognizedTextBox.Text = _placeholderText;
+                RecognizedTextBox.Foreground = Brushes.Gray;
+                MessageText = "";
+
+                ShowStatusMessage("Text cleared",
+                                new SolidColorBrush(Color.FromRgb(108, 117, 125)));
+                RecognizedTextBox.Focus();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Clear button error: {ex.Message}");
             }
         }
 
@@ -216,7 +396,8 @@ namespace GameApp.Pages
                 }
                 else
                 {
-                    ShowStatusMessage("Please enter a message first", Brushes.Orange);
+                    ShowStatusMessage("Please enter a message first",
+                                    new SolidColorBrush(Color.FromRgb(255, 193, 7)));
                     RecognizedTextBox.Focus();
                 }
             }
@@ -283,8 +464,15 @@ namespace GameApp.Pages
                 _isListening = false;
                 _recordingTimer?.Stop();
 
+                // Reset voice button
                 VoiceRecognitionButton.Content = "🎤 Start Voice Recognition";
-                VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(40, 167, 69)); // Green color
+                VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(40, 167, 69)); // Green
+
+                // Hide recording time
+                if (RecordingTimeTextBlock != null)
+                {
+                    RecordingTimeTextBlock.Visibility = Visibility.Collapsed;
+                }
             }
             catch (Exception ex)
             {
@@ -296,13 +484,13 @@ namespace GameApp.Pages
         {
             try
             {
-                // You can implement a status display here if needed
-                // For now, just log to debug
                 Debug.WriteLine($"Status: {message}");
 
-                // If you have a status TextBlock in your XAML, uncomment and use this:
-                // StatusTextBlock.Text = message;
-                // StatusTextBlock.Foreground = color;
+                if (StatusTextBlock != null)
+                {
+                    StatusTextBlock.Text = message;
+                    StatusTextBlock.Foreground = color;
+                }
             }
             catch (Exception ex)
             {
@@ -315,8 +503,12 @@ namespace GameApp.Pages
             try
             {
                 _recordingSeconds++;
-                // Update UI with recording time if needed
                 Debug.WriteLine($"Recording: {_recordingSeconds}s");
+
+                if (RecordingTimeTextBlock != null)
+                {
+                    RecordingTimeTextBlock.Text = $"Recording: {_recordingSeconds}s";
+                }
             }
             catch (Exception ex)
             {
