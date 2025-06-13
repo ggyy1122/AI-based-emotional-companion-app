@@ -196,7 +196,7 @@ namespace GameApp.Pages
                 ShowChatArea();
                 _sessionManager.SwitchToSession(selectedSession);
             }
-           
+
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace GameApp.Pages
             try
             {
                 // Add a small delay to ensure the response is fully displayed
-                await Task.Delay(500);
+                await Task.Delay(10);
 
                 if (_voiceService != null && _voiceService.IsInitialized)
                 {
@@ -858,7 +858,7 @@ namespace GameApp.Pages
         private void FavoriteButton_Click(object sender, RoutedEventArgs e)
         {
             _isInFavoriteView = true;
-          //  _isFromFavoritePreview = false;
+            //  _isFromFavoritePreview = false;
             ShowFavoritePreview();
         }
 
