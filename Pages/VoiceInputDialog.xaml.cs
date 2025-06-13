@@ -1,33 +1,29 @@
-using System.Windows;
-using GameApp.Services.Voice;
-using System.Windows.Media;
 using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
+using GameApp.Services.Voice;
+using System.Diagnostics;
 
 namespace GameApp.Pages
 {
     public partial class VoiceInputDialog : Window
     {
-        public string MessageText { get; set; }
-        public bool SendMessage { get; private set; }
-
-        private bool isPlaceholderText = true;
         private VoiceService _voiceService;
-        private bool isListening = false;
+        private DispatcherTimer _recordingTimer;
+        private int _recordingSeconds;
+        private bool _isListening;
+        private string _placeholderText = "Type your message here...";
+
+        public string MessageText { get; private set; } = "";
+        public bool SendMessage { get; private set; } = false;
 
         public VoiceInputDialog()
         {
             InitializeComponent();
-            MessageText = string.Empty;
-            SendMessage = false;
-
-            // Initialize voice service
             InitializeVoiceService();
-
-            // Set focus to text box
-            RecognizedTextBox.Focus();
-
-            // Automatically start voice recognition after initialization
-            StartVoiceRecognitionAutomatically();
+            SetupUI();
         }
 
         private void InitializeVoiceService()
@@ -35,212 +31,325 @@ namespace GameApp.Pages
             try
             {
                 _voiceService = new VoiceService();
-                _voiceService.StatusChanged += OnVoiceStatusChanged;
-                _voiceService.SpeechRecognized += OnSpeechRecognized;
-                _voiceService.ListeningStateChanged += OnListeningStateChanged;
 
-                if (!_voiceService.IsInitialized)
+                // Subscribe to the correct events from VoiceService
+                _voiceService.RecognitionCompleted += OnSpeechRecognized;
+                _voiceService.RecognitionError += OnRecognitionError;
+                _voiceService.RecordingStarted += OnRecordingStarted;
+                _voiceService.RecordingStopped += OnRecordingStopped;
+                _voiceService.StatusChanged += OnStatusChanged;
+
+                // Initialize recording timer
+                _recordingTimer = new DispatcherTimer
                 {
-                    MessageBox.Show("Warning: Voice service not initialized", "Voice Service",
-                                   MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                    Interval = TimeSpan.FromSeconds(1)
+                };
+                _recordingTimer.Tick += OnRecordingTimerTick;
+
+                Debug.WriteLine("VoiceInputDialog: Voice service initialized successfully");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                MessageBox.Show($"Voice service initialization failed: {ex.Message}",
-                               "Voice Service Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Debug.WriteLine($"VoiceInputDialog: Voice service initialization failed: {ex.Message}");
+                VoiceRecognitionButton.IsEnabled = false;
+                VoiceRecognitionButton.Content = "🚫 Voice Unavailable";
             }
         }
 
-        /// <summary>
-        /// Automatically start voice recognition when dialog opens
-        /// </summary>
-        private void StartVoiceRecognitionAutomatically()
+        private void SetupUI()
         {
-            // Use a small delay to ensure the dialog is fully loaded
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_voiceService != null && _voiceService.IsInitialized && !isListening)
-                {
-                    try
-                    {
-                        _voiceService.StartListening();
-                    }
-                    catch (System.Exception ex)
-                    {
-                        MessageBox.Show($"Failed to start voice recognition automatically: {ex.Message}",
-                                       "Voice Recognition Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-            }), System.Windows.Threading.DispatcherPriority.Loaded);
+            // Set placeholder text appearance
+            RecognizedTextBox.Foreground = Brushes.Gray;
+            RecognizedTextBox.Text = _placeholderText;
         }
 
-        private void OnVoiceStatusChanged(string status)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RecognizedTextBox.Focus();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Window_Loaded error: {ex.Message}");
+            }
+        }
+
+        #region Voice Recognition Event Handlers
+
+        private void OnSpeechRecognized(object sender, string recognizedText)
         {
             Dispatcher.Invoke(() =>
             {
-                // Status change handling without logging
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(recognizedText))
+                    {
+                        // Clear placeholder text and set recognized text
+                        RecognizedTextBox.Foreground = Brushes.Black;
+                        RecognizedTextBox.Text = recognizedText;
+                        MessageText = recognizedText;
+
+                        Debug.WriteLine($"Speech recognized: {recognizedText}");
+                    }
+
+                    StopListening();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"OnSpeechRecognized error: {ex.Message}");
+                }
             });
         }
 
-        private void OnSpeechRecognized(string recognizedText)
+        private void OnRecognitionError(object sender, string error)
         {
             Dispatcher.Invoke(() =>
             {
-                // Only log for recognized speech
-                Console.WriteLine($"*** Speech Recognized: '{recognizedText}' ***");
-
-                if (string.IsNullOrWhiteSpace(recognizedText))
+                try
                 {
-                    return;
+                    Debug.WriteLine($"Recognition error: {error}");
+                    StopListening();
+
+                    // Show error message briefly
+                    ShowStatusMessage($"Voice recognition failed: {error}", Brushes.Red);
                 }
-
-                // Clear placeholder text if present
-                if (isPlaceholderText)
+                catch (Exception ex)
                 {
-                    RecognizedTextBox.Text = string.Empty;
-                    isPlaceholderText = false;
-                    RecognizedTextBox.Foreground = Brushes.Black;
+                    Debug.WriteLine($"OnRecognitionError error: {ex.Message}");
                 }
+            });
+        }
 
-                // Append recognized text
-                if (string.IsNullOrWhiteSpace(RecognizedTextBox.Text))
+        private void OnRecordingStarted(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                try
                 {
-                    RecognizedTextBox.Text = recognizedText;
+                    _isListening = true;
+                    _recordingSeconds = 0;
+                    _recordingTimer.Start();
+
+                    VoiceRecognitionButton.Content = "🛑 Stop Recording";
+                    VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red color
+
+                    ShowStatusMessage("🎤 Listening... Speak now", Brushes.Green);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"OnRecordingStarted error: {ex.Message}");
+                }
+            });
+        }
+
+        private void OnRecordingStopped(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    StopListening();
+                    ShowStatusMessage("Processing speech...", Brushes.Blue);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"OnRecordingStopped error: {ex.Message}");
+                }
+            });
+        }
+
+        private void OnStatusChanged(string status)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    ShowStatusMessage(status, Brushes.Gray);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"OnStatusChanged error: {ex.Message}");
+                }
+            });
+        }
+
+        #endregion
+
+        #region UI Event Handlers
+
+        private async void StartVoiceRecognition_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!_isListening)
+                {
+                    ShowStatusMessage("Starting voice recognition...", Brushes.Blue);
+                    await _voiceService.StartRecordingAsync();
                 }
                 else
                 {
-                    RecognizedTextBox.Text += " " + recognizedText;
+                    await _voiceService.StopRecordingAsync();
                 }
-
-                // Move cursor to end
-                RecognizedTextBox.CaretIndex = RecognizedTextBox.Text.Length;
-                RecognizedTextBox.Focus();
-            });
-        }
-
-        private void OnListeningStateChanged(bool listening)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                isListening = listening;
-                UpdateVoiceButton();
-            });
-        }
-
-        private void UpdateVoiceButton()
-        {
-            if (isListening)
-            {
-                VoiceRecognitionButton.Content = "🔴 Stop Recording";
-                VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(220, 53, 69));
             }
-            else
+            catch (Exception ex)
             {
-                VoiceRecognitionButton.Content = "🎤 Start Voice Recognition";
-                VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(40, 167, 69));
+                Debug.WriteLine($"Voice recognition button error: {ex.Message}");
+                ShowStatusMessage($"Voice recognition failed: {ex.Message}", Brushes.Red);
+                StopListening();
             }
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            // Stop any ongoing voice recognition
-            if (isListening)
+            try
             {
-                _voiceService?.StopListening();
-            }
+                string text = RecognizedTextBox.Text?.Trim();
 
-            // Check if it's placeholder text and handle accordingly
-            if (isPlaceholderText || string.IsNullOrWhiteSpace(RecognizedTextBox.Text) ||
-                RecognizedTextBox.Text == "Type your message here...")
+                // Don't send if it's placeholder text or empty
+                if (!string.IsNullOrWhiteSpace(text) && text != _placeholderText)
+                {
+                    MessageText = text;
+                    SendMessage = true;
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    ShowStatusMessage("Please enter a message first", Brushes.Orange);
+                    RecognizedTextBox.Focus();
+                }
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("Please enter a message before sending.", "Empty Message",
-                               MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
+                Debug.WriteLine($"Send button error: {ex.Message}");
             }
-
-            MessageText = RecognizedTextBox.Text.Trim();
-            SendMessage = true;
-            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if (isListening)
-            {
-                _voiceService?.StopListening();
-            }
-
-            SendMessage = false;
-            DialogResult = false;
-        }
-
-        private void StartVoiceRecognition_Click(object sender, RoutedEventArgs e)
-        {
-            if (_voiceService == null || !_voiceService.IsInitialized)
-            {
-                MessageBox.Show("Voice service is not available. Please check your microphone settings.",
-                               "Voice Recognition Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             try
             {
-                if (isListening)
-                {
-                    _voiceService.StopListening();
-                }
-                else
-                {
-                    _voiceService.StartListening();
-                }
+                SendMessage = false;
+                DialogResult = false;
+                Close();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                MessageBox.Show($"Voice recognition error: {ex.Message}",
-                               "Voice Recognition Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Cancel button error: {ex.Message}");
             }
         }
 
         private void RecognizedTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (isPlaceholderText && RecognizedTextBox.Text == "Type your message here...")
+            try
             {
-                RecognizedTextBox.Text = string.Empty;
-                RecognizedTextBox.Foreground = Brushes.Black;
-                isPlaceholderText = false;
+                if (RecognizedTextBox.Text == _placeholderText)
+                {
+                    RecognizedTextBox.Text = "";
+                    RecognizedTextBox.Foreground = Brushes.Black;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"GotFocus error: {ex.Message}");
             }
         }
 
         private void RecognizedTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(RecognizedTextBox.Text))
+            try
             {
-                RecognizedTextBox.Text = "Type your message here...";
-                RecognizedTextBox.Foreground = Brushes.Gray;
-                isPlaceholderText = true;
+                if (string.IsNullOrWhiteSpace(RecognizedTextBox.Text))
+                {
+                    RecognizedTextBox.Text = _placeholderText;
+                    RecognizedTextBox.Foreground = Brushes.Gray;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LostFocus error: {ex.Message}");
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            RecognizedTextBox.Foreground = Brushes.Gray;
-            RecognizedTextBox.Focus();
-        }
+        #endregion
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        #region Helper Methods
+
+        private void StopListening()
         {
-            if (isListening)
+            try
             {
-                _voiceService?.StopListening();
+                _isListening = false;
+                _recordingTimer?.Stop();
+
+                VoiceRecognitionButton.Content = "🎤 Start Voice Recognition";
+                VoiceRecognitionButton.Background = new SolidColorBrush(Color.FromRgb(40, 167, 69)); // Green color
             }
-            _voiceService?.Dispose();
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"StopListening error: {ex.Message}");
+            }
         }
 
-        protected override void OnClosed(System.EventArgs e)
+        private void ShowStatusMessage(string message, Brush color)
         {
-            _voiceService?.Dispose();
-            base.OnClosed(e);
+            try
+            {
+                // You can implement a status display here if needed
+                // For now, just log to debug
+                Debug.WriteLine($"Status: {message}");
+
+                // If you have a status TextBlock in your XAML, uncomment and use this:
+                // StatusTextBlock.Text = message;
+                // StatusTextBlock.Foreground = color;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ShowStatusMessage error: {ex.Message}");
+            }
         }
+
+        private void OnRecordingTimerTick(object sender, EventArgs e)
+        {
+            try
+            {
+                _recordingSeconds++;
+                // Update UI with recording time if needed
+                Debug.WriteLine($"Recording: {_recordingSeconds}s");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Recording timer error: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region Window Events
+
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                // Stop any ongoing recording
+                if (_isListening && _voiceService != null)
+                {
+                    await _voiceService.StopRecordingAsync();
+                }
+
+                // Clean up resources
+                _recordingTimer?.Stop();
+                _voiceService?.Dispose();
+
+                Debug.WriteLine("VoiceInputDialog: Cleanup completed");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Window closing error: {ex.Message}");
+            }
+        }
+
+        #endregion
     }
 }

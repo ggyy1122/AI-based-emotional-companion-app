@@ -41,6 +41,16 @@
                    HorizontalAlignment="Center"
                    TextWrapping="Wrap"/>
 
+        <TextBlock x:Name="StatusTextBlock"
+                   Grid.Row="1"
+                   Text=""
+                   FontSize="13"
+                   Foreground="Gray"
+                   Margin="0,5,0,15"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Visibility="Collapsed"/>
+
         <!-- Message Input Area -->
         <Border Grid.Row="2"
                 BorderBrush="#E0E0E0"
