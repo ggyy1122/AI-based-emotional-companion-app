@@ -6,9 +6,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
 
-namespace GameApp.Features.HeartMemo
+namespace GameApp.Services.HeartMemo
 {
-     public class Memo : INotifyPropertyChanged
+    public class Memo : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -133,7 +133,7 @@ namespace GameApp.Features.HeartMemo
         // 添加调试信息的属性通知
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-           
+
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
@@ -152,7 +152,7 @@ namespace GameApp.Features.HeartMemo
         }
 
         // 新增：数据验证属性
-        public bool IsValid => !string.IsNullOrWhiteSpace(Title) && 
+        public bool IsValid => !string.IsNullOrWhiteSpace(Title) &&
                              !string.IsNullOrWhiteSpace(Content) &&
                              EmotionColor != null;
     }

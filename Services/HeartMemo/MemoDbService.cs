@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Windows.Media;
 
-namespace GameApp.Features.HeartMemo
+namespace GameApp.Services.HeartMemo
 {
     class MemoDbService
     {

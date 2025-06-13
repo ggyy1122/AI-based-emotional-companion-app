@@ -1,4 +1,4 @@
-﻿using GameApp.Features.HeartMemo;
+﻿using GameApp.Services.HeartMemo;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -452,10 +452,10 @@ namespace GameApp.Pages
 
                     MemoDbService.DeleteMemoWithVoices(CurrentMemo.Id);
 
-          
+
                     AllMemos.Remove(CurrentMemo);
 
-        
+
                     CurrentMemo = AllMemos.FirstOrDefault() ?? CreateNewMemo();
 
                     MessageBox.Show("删除成功");

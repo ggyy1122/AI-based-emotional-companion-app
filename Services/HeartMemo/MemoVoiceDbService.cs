@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 
-namespace GameApp.Features.HeartMemo
+namespace GameApp.Services.HeartMemo
 {
     public static class MemoVoiceDbService
     {
