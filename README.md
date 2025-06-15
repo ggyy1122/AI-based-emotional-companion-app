@@ -455,9 +455,9 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 
 ### 6.1 Main Page
 
--Users can interact with the sprite. For example, by clicking or dragging a specific location, the sprite will move to the corresponding position. The sprite periodically displays relaxing messages, and the message style can be changed by altering the sprite's state.
+- Users can interact with the sprite. For example, by clicking or dragging a specific location, the sprite will move to the corresponding position. The sprite periodically displays relaxing messages, and the message style can be changed by altering the sprite's state.
 ![1.png](mdimages/1.png)
--Double-click the sprite to open a simple AI companion chat window.
+- Double-click the sprite to open a simple AI companion chat window.
 ![2.png](mdimages/2.png)
 
 ### 6.2 AI Chat
