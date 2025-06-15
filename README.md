@@ -450,3 +450,39 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 - Implement voice-only navigation mode for visually impaired users
 - Add cognitive accessibility features for users with learning differences
 - Develop content adaptation based on individual accessibility needs
+
+## 6. Interface Effects
+
+### 6.1 Main Page
+
+-Users can interact with the sprite. For example, by clicking or dragging a specific location, the sprite will move to the corresponding position. The sprite periodically displays relaxing messages, and the message style can be changed by altering the sprite's state.
+
+-Double-click the sprite to open a simple AI companion chat window.
+
+### 6.2 AI Chat
+
+-Multiple chat sessions can be created.
+
+-Click "favorite" to view the favorited chats.
+
+-Click the voice button in the lower-right corner to enter the voice chat interface.
+
+### 6.3 Memorandum of Thoughts
+
+-Multiple memos can be created, and content can be entered into them.
+
+-Voice recording is supported.
+
+-Saved entries can be viewed.
+
+### 6.4 Stress-Relief Mini-Game
+
+-The mini-game interface defaults to mouse controls. The turret rotates toward the mouse position to fire and eliminate monsters.
+
+-Click "Settings" to choose the control mode (mouse or gesture) or adjust the monster spawn speed.
+
+-Gesture recognition controls the game—the turret fires in the direction pointed by the thumb.
+
+### 6.5 Sprite data interface
+
+-Sprite data interface for viewing various records.
