@@ -462,9 +462,9 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 
 ### 6.2 AI Chat
 
--Multiple chat sessions can be created.
+-Multiple chat sessions can be created.Important chats can be bookmarked.
 ![3.png](mdimages/3.png)
--Click "favorite" to view the favorited chats.
+-Click "favorite" to view the bookmarked chats.
 ![4.png](mdimages/4.png)
 -Click the voice button in the lower-right corner to enter the voice chat interface.
 ![5.png](mdimages/5.png)
