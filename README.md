@@ -118,7 +118,7 @@ GameApp/
 
 - Supports daily notes, mood categorization, and persistent management, helping users organize emotions and memories.
 
-5. **Mini-game Page**  
+4. **Mini-game Page**  
 
 - Integrated stress-relief mini-games (such as turret games), supporting both standard and gesture modes for a richer experience.
 
