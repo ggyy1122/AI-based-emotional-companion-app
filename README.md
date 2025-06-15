@@ -287,7 +287,7 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 - Provides hands-free interaction options for multitasking scenarios
 - Creates more natural and conversational user experience
 
-## 4. Advantages and Innovations
+## 4. Advantages, Innovations and Limitations
 
 ### 4.1 Technical Architecture Innovations
 
@@ -361,6 +361,14 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 
 - **Open Source Foundation**: Leverages open standards (ONNX, SQLite) and APIs rather than proprietary solutions, reducing licensing costs and vendor lock-in
 - **Scalable Architecture**: Modular design allows for feature expansion and technology upgrades without complete system rebuilds
+
+### 4.7 Limitations
+
+- **Homepage Integration**: The embedding of functional modules feels unnatural, and the connections between features lack cohesiveness.
+- **AI Chat Limitations**: The AI chat currently does not support file attachments.
+- **Mini-Game Loading Delay**: Upon entering the mini-game, users experience a noticeable wait time due to model loading and camera initialization.
+- **Gesture Recognition Constraints**: The gesture control system requires specific hand-to-camera distances and precise hand shapes, which may challenge first-time users during adaptation.
+- **Audio Feedback Missing**: The application lacks sound effects, diminishing interactive feedback.
 
 ## 5. Future Optimization
 
