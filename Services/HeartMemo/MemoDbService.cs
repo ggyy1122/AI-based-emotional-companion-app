@@ -8,7 +8,27 @@ namespace GameApp.Services.HeartMemo
     class MemoDbService
     {
         private static string ConnectionString => App.ConnectionString;
-        // 保存备忘录（新建或更新）
+        //确保备忘录存在
+        public static void EnsureTableExists()
+        {
+            const string sql = @"
+                CREATE TABLE IF NOT EXISTS HeartMemos (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Date DATETIME NOT NULL,
+                    Title TEXT,
+                    Content TEXT,
+                    EmotionColor TEXT
+                );";
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        // 保存备忘录（新建）
         public static int SaveMemo(Memo memo)
         {
             if (memo.Id == 0)
@@ -21,7 +41,7 @@ namespace GameApp.Services.HeartMemo
                 return memo.Id;
             }
         }
-
+        //创建备忘录
         private static int CreateMemo(Memo memo)
         {
             const string sql = @"
@@ -43,7 +63,7 @@ namespace GameApp.Services.HeartMemo
                 }
             }
         }
-
+        //更新备忘录
         public static void UpdateMemo(Memo memo)
         {
             const string sql = @"
@@ -80,7 +100,6 @@ namespace GameApp.Services.HeartMemo
             }
             return memo;
         }
-
         // 获取所有备忘录（不含语音）
         public static List<Memo> GetAllMemos()
         {
@@ -108,7 +127,6 @@ namespace GameApp.Services.HeartMemo
             }
             return list;
         }
-
         // 删除备忘录及其语音
         public static void DeleteMemoWithVoices(int memoId)
         {
