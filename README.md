@@ -458,31 +458,36 @@ Automatically analyzes users’ emotional changes, chat history, and behavioral 
 -Users can interact with the sprite. For example, by clicking or dragging a specific location, the sprite will move to the corresponding position. The sprite periodically displays relaxing messages, and the message style can be changed by altering the sprite's state.
 ![1.png](mdimages/1.png)
 -Double-click the sprite to open a simple AI companion chat window.
+![2.png](mdimages/2.png)
 
 ### 6.2 AI Chat
 
 -Multiple chat sessions can be created.
-
+![3.png](mdimages/3.png)
 -Click "favorite" to view the favorited chats.
-
+![4.png](mdimages/4.png)
 -Click the voice button in the lower-right corner to enter the voice chat interface.
+![5.png](mdimages/5.png)
 
 ### 6.3 Memorandum of Thoughts
 
 -Multiple memos can be created, and content can be entered into them.
-
+![6.png](mdimages/6.png)
 -Voice recording is supported.
-
+![7.png](mdimages/7.png)
 -Saved entries can be viewed.
+![8.png](mdimages/8.png)
 
 ### 6.4 Stress-Relief Mini-Game
 
 -The mini-game interface defaults to mouse controls. The turret rotates toward the mouse position to fire and eliminate monsters.
-
+![9.png](mdimages/9.png)
 -Click "Settings" to choose the control mode (mouse or gesture) or adjust the monster spawn speed.
-
+![10.png](mdimages/10.png)
 -Gesture recognition controls the game—the turret fires in the direction pointed by the thumb.
+![11.png](mdimages/11.png)
 
 ### 6.5 Sprite data interface
 
 -Sprite data interface for viewing various records.
+![12.png](mdimages/12.png)
