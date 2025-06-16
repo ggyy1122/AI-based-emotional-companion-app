@@ -90,6 +90,7 @@ namespace GameApp.Pages
             try
             {
                 MemoDbService.EnsureTableExists();
+                MemoVoiceDbService.EnsureTableExists();
                 var memos = MemoDbService.GetAllMemos()
                     .OrderByDescending(m => m.Date)
                     .ToList();

@@ -22,19 +22,32 @@ namespace HandAngleDemo
 
         public HandGesture()
         {
-            //InitializeComponent();
-            string projectRoot = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName;
-            string modelPath = Path.Combine(projectRoot, "Models", "hand_landmark_sparse_Nx3x224x224.onnx");
+            // 使用应用程序基目录，而非动态计算路径
+            string modelPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, // 指向EXE所在目录
+                "Models",
+                "hand_landmark_sparse_Nx3x224x224.onnx"
+            );
+
+            // 主动检查文件是否存在
+            if (!File.Exists(modelPath))
+            {
+                throw new FileNotFoundException(
+                    $"模型文件未找到！请确保以下路径存在文件:\n{modelPath}\n" +
+                    "解决方案:\n" +
+                    "1. 在输出目录创建Models文件夹\n" +
+                    "2. 将模型文件复制到该文件夹中",
+                    modelPath
+                );
+            }
+
             _detector = new HandLandmarkDetector(modelPath);
             StartCamera();
-
-            //FileStream fs = new FileStream("output.log", FileMode.Create);
-            //StreamWriter sw = new StreamWriter(fs);
-            //Console.SetOut(sw);
         }
 
         public void StartCamera()
         {
+
             _cap = new VideoCapture(0);
             _cap.Set(VideoCaptureProperties.FrameWidth, CameraWidth);
             _cap.Set(VideoCaptureProperties.FrameHeight, CameraHeight);

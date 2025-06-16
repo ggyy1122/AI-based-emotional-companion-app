@@ -11,6 +11,29 @@ namespace GameApp.Services.HeartMemo
         private static string VoiceStoragePath => Path.Combine(App.DataDirectory, "Voices");
         private static string VoiceRelativePath => "Voices"; // 相对路径
 
+        public static void EnsureTableExists()
+        {
+            // 确保语音存储目录存在
+            Directory.CreateDirectory(VoiceStoragePath);
+
+            const string sql = @"
+        CREATE TABLE IF NOT EXISTS MemoVoices (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            MemoId INTEGER NOT NULL,
+            VoicePath TEXT NOT NULL,
+            FOREIGN KEY(MemoId) REFERENCES HeartMemos(Id) ON DELETE CASCADE
+        );";
+
+            using (var conn = new SQLiteConnection(ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         // 添加语音并返回完整对象
         public static MemoVoice AddVoice(int memoId, string tempFilePath)
         {

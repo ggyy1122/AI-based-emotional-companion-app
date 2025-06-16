@@ -185,6 +185,7 @@ namespace TowerDefenseGame
 
         private void InitializeCameraWithFallback()
         {
+
             try
             {
                 // Check if camera hardware is available

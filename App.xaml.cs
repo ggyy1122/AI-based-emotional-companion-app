@@ -22,7 +22,10 @@ namespace GameApp
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            HandGestureManager.Instance.Preload(); // 应用一启动就后台加载
+            // 后台异步加载，避免主线程卡死
+            System.Threading.Tasks.Task.Run(() => {
+                HandGestureManager.Instance.Preload();
+            });
         }
 
         // 添加应用程序数据目录属性

@@ -36,4 +36,14 @@
     </Resource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Models\hand_landmark_sparse_Nx3x224x224.onnx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Models\hand_landmark_sparse_Nx3x224x224.onnx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
