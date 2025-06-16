@@ -5,8 +5,8 @@ namespace GameApp.Services.Voice
     public class VoiceServiceSetting : INotifyPropertyChanged
     {
         // Baidu API Settings
-        private string _baiduApiKey = "TNaUadU6ClVo0BXcZntAVCjN";
-        private string _baiduSecretKey = "EWQvLl3rSulum44V8cwoIvJ4edqkbizz";
+        private string _baiduApiKey = "ApiKey";
+        private string _baiduSecretKey = "SecretKey";
         private string _baiduToken = "";
 
         // Audio Settings
