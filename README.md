@@ -86,7 +86,7 @@ dotnet run
 - Verify API keys are correctly configured and have sufficient quota
 - Check that all required NuGet packages are properly installed
 
-** Direct Execution (Release Build) **
+**Direct Execution (Release Build)**
 
 For quick testing without compilation:
 
