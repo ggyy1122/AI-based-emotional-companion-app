@@ -1,5 +1,24 @@
 # AI Based Emotional Interaction Application
 
+
+
+## Team Contribution
+
+> | Name         | Student ID | Key Contributions                                            | Percentage |
+> | ------------ | ---------- | ------------------------------------------------------------ | ---------- |
+> | Yi Guan      | 2352852    | • Heart Memo Feature<br>• Main Interface Design<br>• Database Schema<br>• AI Sprite Design<br/>• Data Persistence Layer<br/>• Data Display Interface | 33.3%      |
+> | Ran Li       | 2352616    | • LLM API Architecture<br>• Speech Recognition Interface<br>• Conversational AI Engine<br>• Chat UI Framework<br/>• Error Resilience System | 33.3%      |
+> | Guangchun Yu | 2352740    | • Gesture Recognition API<br>• Mini-Game Design<br>• Multi-Mode Game Launcher<br>• Game UI Design | 33.3%      |
+>
+> **Contribution Metrics:**
+>
+> 1. Git commit statistics
+> 2. Module complexity
+> 3. Documentation/test coverage
+> 4. Active working hours
+
+
+
 ## 1.Introduction
 
 This project is a multimodal emotional interaction AI application that integrates three interaction modes: voice, text, and gesture. Built with C# and WPF, the application incorporates Baidu Speech Recognition API (ASR), the OpenAI GPT-4o large language model, and the MediaPipe-based Hand Landmark Sparse gesture recognition model, enabling natural and smooth human-machine emotional communication and companionship.
@@ -17,7 +36,7 @@ This project is a multimodal emotional interaction AI application that integrate
 **Setup Steps:**
 
 1. **Clone the Repository:**
-  
+
 ```bash
 git clone https://github.com/ggyy1122/AI-based-emotional-companion-app.git
 cd AI-based-emotional-companion-app
@@ -28,7 +47,7 @@ cd AI-based-emotional-companion-app
 - Open `Services/Voice/VoiceServiceSetting.cs`
 - Replace placeholder values with your Baidu Speech API credentials
 - Open `Services/AIChat/AIConfigSetting.cs`
-- Replace placeholder values with your OpenRouter API key for GPT-4o access
+- Replace placeholder values with your API key for GPT-4o access
 
 3. **Install Dependencies:**
 
@@ -66,6 +85,27 @@ dotnet run
 - Ensure your camera is not being used by other applications
 - Verify API keys are correctly configured and have sufficient quota
 - Check that all required NuGet packages are properly installed
+
+**Direct Execution (Release Build) **
+
+For quick testing without compilation:
+
+1. Navigate to the release folder:
+
+   ```bash
+   cd Release\net8.0-windows
+   ```
+
+2. Double-click `GameApp.exe` or run via command line:
+
+   ```bash
+   .\GameApp.exe
+   ```
+
+**Note:**  
+
+- Ensure all files in the folder remain together (especially `.dll` and `Models/`)
+- API configurations still apply 
 
 ### 1.2 Key Technologies Overview
 
